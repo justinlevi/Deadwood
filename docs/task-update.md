@@ -11,9 +11,3 @@
 - Updated cancel action to clear challenge target list
 - What's next: review remaining bug fixes
 
-### [2025-06-28 23:36 UTC] Fix AI timer state mutation
-
-- Rewrote AI effect to track and clear timers safely
-- Added phase validation in reducer
-- Created e2e and unit tests for timer cleanup and phase checks
-- What's next: monitor other bug reports

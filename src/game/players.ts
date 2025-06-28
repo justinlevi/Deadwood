@@ -5,7 +5,7 @@ export const CHARACTERS: Character[] = [
   {
     id: 'al',
     name: 'Al Swearengen',
-    ability: 'Gains +1 gold when any player enters Gem Saloon',
+    ability: 'Gains +1 gold when another player enters Gem Saloon',
     description: 'The ruthless owner of the Gem Saloon',
   },
   {

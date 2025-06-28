@@ -3,7 +3,8 @@ import { gameReducer } from '../../src/game'
 import type { GameState } from '../../src/game'
 import { GamePhase, ActionType } from '../../src/game'
 import { createInitialBoard } from '../../src/game'
-import { createPlayers } from '../../src/game/players'
+import { createPlayers, CHARACTERS } from '../../src/game/players'
+import { executeAction } from '../../src/game/reducer'
 
 const initialState: GameState = {
   phase: GamePhase.PLAYER_TURN,
@@ -77,6 +78,33 @@ describe('action phase validation', () => {
     })
 
     expect(newState).toEqual(state)
+=======
+const makePlayer = (index: number, position = 0) => ({
+  id: `player-${index}`,
+  name: `Player ${index}`,
+  character: CHARACTERS[index % CHARACTERS.length],
+  position,
+  gold: 3,
+  totalInfluence: 0,
+  isAI: index > 0,
+  actionsRemaining: 2,
+})
+
+describe('challenge action targeting', () => {
+  it('correctly identifies challenge target by index', () => {
+    const board = createInitialBoard()
+    board[0].influences = { 'player-1': 2 }
+
+    const state = {
+      phase: GamePhase.PLAYER_TURN,
+      currentPlayer: 0,
+      players: [
+        makePlayer(0, 0),
+        { ...makePlayer(1, 0), totalInfluence: 2 },
+      ],
+      board,
+      turnCount: 1,
+      gameConfig: { playerCount: 2, aiDifficulty: 'medium' as const },
   })
 })
 
