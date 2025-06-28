@@ -35,6 +35,14 @@ const DeadwoodGame: React.FC = () => {
   }
   const [gameState, dispatch] = useReducer(gameReducer, initialState)
 
+  // expose helpers for Playwright tests
+  useEffect(() => {
+    ;(window as any).dispatchGameAction = dispatch
+    ;(window as any).getGameState = () => gameState
+    ;(window as any).GamePhase = GamePhase
+    ;(window as any).ActionType = ActionType
+  }, [dispatch, gameState])
+
   useEffect(() => {
     if (
       gameState.phase === GamePhase.PLAYER_TURN &&
