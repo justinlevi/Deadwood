@@ -8,7 +8,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "playwright test",
-    "postinstall": "playwright install --with-deps"
+    "postinstall": "playwright install --with-deps",
+    "lint": "prettier --check .",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -19,6 +21,7 @@
     "@types/react": "^18.2.24",
     "@types/react-dom": "^18.2.11",
     "@vitejs/plugin-react": "^4.1.0",
+    "prettier": "^3.6.2",
     "typescript": "~5.8.3",
     "vite": "^7.0.0"
   }
