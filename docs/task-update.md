@@ -11,8 +11,3 @@
 - Updated cancel action to clear challenge target list
 - What's next: review remaining bug fixes
 
-### [2025-06-28 23:33 UTC] Fix challenge player ID bug
-
-- Corrected challenge action to access players by index
-- Added unit and integration tests for challenge targeting edge cases
-- What's next: ensure all tests pass and update documentation if needed
