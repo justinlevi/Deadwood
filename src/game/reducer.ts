@@ -2,7 +2,14 @@ import type { GameState, PendingAction, GameAction } from './types'
 import { GamePhase, ActionType } from './types'
 import { createPlayers } from './players'
 import { createInitialBoard } from './board'
-import { getMoveCost, getChallengeCost, getLocationInfluence } from './utils'
+import {
+  getMoveCost,
+  getChallengeCost,
+  getLocationInfluence,
+  getPlayerSafe,
+  getLocationSafe,
+  findPlayerIndex,
+} from './utils'
 
 export const checkVictoryConditions = (
   state: GameState
@@ -15,7 +22,7 @@ export const checkVictoryConditions = (
     if (maxInfluenceCount >= 3) return state.players.indexOf(player)
     if (player.totalInfluence >= 12) return state.players.indexOf(player)
   }
-  if (state.turnCount >= 20) {
+  if (state.roundCount >= 20) {
     let maxInfluence = -1
     let winner = 0
     state.players.forEach((player, index) => {
@@ -34,16 +41,39 @@ export const checkVictoryConditions = (
   return undefined
 }
 
+const checkAndHandleVictory = (
+  newState: GameState,
+  completedActions: PendingAction[]
+): GameState | null => {
+  const winner = checkVictoryConditions(newState)
+  if (winner !== undefined) {
+    return {
+      ...newState,
+      phase: GamePhase.GAME_OVER,
+      winner,
+      completedActions,
+      pendingAction: undefined,
+      message: `${newState.players[winner].name} wins!`,
+    }
+  }
+  return null
+}
+
 export const executeAction = (
   state: GameState,
   action: PendingAction
 ): GameState => {
-  const currentPlayer = state.players[state.currentPlayer]
+  const currentPlayer = getPlayerSafe(state.players, state.currentPlayer)!
   const newBoard = [...state.board]
   const newPlayers = [...state.players]
   switch (action.type) {
     case ActionType.MOVE: {
       if (action.target === undefined) break
+      const targetLocation = getLocationSafe(newBoard, action.target)
+      if (!targetLocation) {
+        console.error('Invalid move target location')
+        break
+      }
       const moveCost = getMoveCost(
         currentPlayer,
         currentPlayer.position,
@@ -56,66 +86,85 @@ export const executeAction = (
       }
       if (action.target === 0) {
         const alPlayer = newPlayers.find((p) => p.character.id === 'al')
-        if (alPlayer) {
-          const alIndex = newPlayers.indexOf(alPlayer)
-          newPlayers[alIndex] = { ...alPlayer, gold: alPlayer.gold + 1 }
+        if (alPlayer && currentPlayer.character.id !== 'al') {
+          const alIndex = findPlayerIndex(newPlayers, alPlayer.id)
+          if (alIndex !== -1) {
+            newPlayers[alIndex] = { ...alPlayer, gold: alPlayer.gold + 1 }
+          }
         }
       }
       break
     }
     case ActionType.CLAIM: {
       const amount = action.amount || 1
-      const location = newBoard[currentPlayer.position]
+      const location = getLocationSafe(newBoard, currentPlayer.position)
+      if (!location) break
       const currentInfluence = getLocationInfluence(location, currentPlayer.id)
-      const actualAmount = Math.min(
-        amount,
-        location.maxInfluence - currentInfluence
-      )
-      if (actualAmount > 0) {
-        newBoard[currentPlayer.position] = {
-          ...location,
-          influences: {
-            ...location.influences,
-            [currentPlayer.id]: currentInfluence + actualAmount,
-          },
-        }
-        newPlayers[state.currentPlayer] = {
-          ...currentPlayer,
-          gold: currentPlayer.gold - actualAmount,
-          totalInfluence: currentPlayer.totalInfluence + actualAmount,
-        }
+      const maxPossible = location.maxInfluence - currentInfluence
+      const actualAmount = Math.min(amount, maxPossible, currentPlayer.gold)
+
+      if (actualAmount <= 0) {
+        console.warn('Cannot claim: insufficient space or gold')
+        break
+      }
+
+      if (actualAmount < amount) {
+        console.info(
+          `Claiming ${actualAmount} instead of ${amount} due to constraints`
+        )
+      }
+
+      newBoard[currentPlayer.position] = {
+        ...location,
+        influences: {
+          ...location.influences,
+          [currentPlayer.id]: currentInfluence + actualAmount,
+        },
+      }
+      newPlayers[state.currentPlayer] = {
+        ...currentPlayer,
+        gold: currentPlayer.gold - actualAmount,
+        totalInfluence: currentPlayer.totalInfluence + actualAmount,
       }
       break
     }
     case ActionType.CHALLENGE: {
       if (action.target === undefined) break
+
+      if (action.target < 0 || action.target >= newPlayers.length) {
+        console.error('Invalid challenge target index:', action.target)
+        break
+      }
+
+      const targetPlayer = newPlayers[action.target]
+      if (!targetPlayer) break
+
+      const location = newBoard[targetPlayer.position]
+      const targetInfluence = getLocationInfluence(location, targetPlayer.id)
+
+      if (targetInfluence <= 0) {
+        console.warn('Cannot challenge: target has no influence at location')
+        break
+      }
+
       const challengeCost = getChallengeCost(currentPlayer)
-      const targetPlayer = newPlayers.find(
-        (p) => p.id === `player-${action.target}`
-      )
-      if (targetPlayer) {
-        const location = newBoard[targetPlayer.position]
-        const targetInfluence = getLocationInfluence(location, targetPlayer.id)
-        if (targetInfluence > 0) {
-          newBoard[targetPlayer.position] = {
-            ...location,
-            influences: {
-              ...location.influences,
-              [targetPlayer.id]: targetInfluence - 1,
-            },
-          }
-          const targetIndex = newPlayers.findIndex(
-            (p) => p.id === targetPlayer.id
-          )
-          newPlayers[targetIndex] = {
-            ...targetPlayer,
-            totalInfluence: targetPlayer.totalInfluence - 1,
-          }
-          newPlayers[state.currentPlayer] = {
-            ...currentPlayer,
-            gold: currentPlayer.gold - challengeCost,
-          }
-        }
+
+      newBoard[targetPlayer.position] = {
+        ...location,
+        influences: {
+          ...location.influences,
+          [targetPlayer.id]: targetInfluence - 1,
+        },
+      }
+
+      newPlayers[action.target] = {
+        ...targetPlayer,
+        totalInfluence: targetPlayer.totalInfluence - 1,
+      }
+
+      newPlayers[state.currentPlayer] = {
+        ...currentPlayer,
+        gold: currentPlayer.gold - challengeCost,
       }
       break
     }
@@ -139,12 +188,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         currentPlayer: 0,
         players,
         board: createInitialBoard(),
-        turnCount: 1,
+        roundCount: 1,
         gameConfig: action.payload,
         actionHistory: [],
         completedActions: [],
         pendingAction: undefined,
-        message: `Turn 1 • ${players[0].character.name}'s turn`,
+        message: `Round 1 • ${players[0].character.name}'s turn`,
       }
     }
     case 'SELECT_ACTION': {
@@ -158,27 +207,18 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ]
 
         if (newCompleted.length >= 2) {
-          const winner = checkVictoryConditions(newState)
-          if (winner !== undefined) {
-            return {
-              ...newState,
-              phase: GamePhase.GAME_OVER,
-              winner,
-              completedActions: newCompleted,
-              pendingAction: undefined,
-              message: `${newState.players[winner].name} wins!`,
-            }
-          }
+          const victoryState = checkAndHandleVictory(newState, newCompleted)
+          if (victoryState) return victoryState
           const nextPlayer = (state.currentPlayer + 1) % state.players.length
           const isNewRound = nextPlayer === 0
           return {
             ...newState,
             currentPlayer: nextPlayer,
-            turnCount: isNewRound ? state.turnCount + 1 : state.turnCount,
+            roundCount: isNewRound ? state.roundCount + 1 : state.roundCount,
             completedActions: [],
             pendingAction: undefined,
             message:
-              `Turn ${isNewRound ? state.turnCount + 1 : state.turnCount} • ` +
+              `Round ${isNewRound ? state.roundCount + 1 : state.roundCount} • ` +
               `${newState.players[nextPlayer].character.name}'s turn`,
           }
         }
@@ -238,27 +278,19 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ...state.completedActions,
         state.pendingAction,
       ]
+      const victoryState = checkAndHandleVictory(newState, newCompletedActions)
+      if (victoryState) return victoryState
+
       if (newCompletedActions.length >= 2) {
-        const winner = checkVictoryConditions(newState)
-        if (winner !== undefined) {
-          return {
-            ...newState,
-            phase: GamePhase.GAME_OVER,
-            winner,
-            completedActions: newCompletedActions,
-            pendingAction: undefined,
-            message: `${newState.players[winner].name} wins!`,
-          }
-        }
         const nextPlayer = (state.currentPlayer + 1) % state.players.length
         const isNewRound = nextPlayer === 0
         return {
           ...newState,
           currentPlayer: nextPlayer,
-          turnCount: isNewRound ? state.turnCount + 1 : state.turnCount,
+          roundCount: isNewRound ? state.roundCount + 1 : state.roundCount,
           completedActions: [],
           pendingAction: undefined,
-          message: `Turn ${isNewRound ? state.turnCount + 1 : state.turnCount} • ${newState.players[nextPlayer].character.name}'s turn`,
+          message: `Round ${isNewRound ? state.roundCount + 1 : state.roundCount} • ${newState.players[nextPlayer].character.name}'s turn`,
         }
       }
       return {
@@ -272,6 +304,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       return {
         ...state,
         pendingAction: undefined,
+        challengeTargets: undefined,
         message:
           state.completedActions.length === 0
             ? 'Select 2 actions'
@@ -293,10 +326,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       return {
         ...state,
         currentPlayer: nextPlayer,
-        turnCount: isNewRound ? state.turnCount + 1 : state.turnCount,
+        roundCount: isNewRound ? state.roundCount + 1 : state.roundCount,
         completedActions: [],
         pendingAction: undefined,
-        message: `Turn ${isNewRound ? state.turnCount + 1 : state.turnCount} • ${state.players[nextPlayer].character.name}'s turn`,
+        message: `Round ${isNewRound ? state.roundCount + 1 : state.roundCount} • ${state.players[nextPlayer].character.name}'s turn`,
       }
     }
     case 'SET_STATE': {
@@ -305,13 +338,31 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'SET_MESSAGE': {
       return { ...state, message: action.payload }
     }
+    case 'SHOW_CHALLENGE_TARGETS': {
+      return {
+        ...state,
+        challengeTargets: action.payload,
+        message: 'Select which player to challenge',
+      }
+    }
+    case 'SELECT_CHALLENGE_TARGET': {
+      if (!state.pendingAction) return state
+      return {
+        ...state,
+        pendingAction: {
+          ...state.pendingAction,
+          target: action.payload,
+        },
+        challengeTargets: undefined,
+      }
+    }
     case 'RESET_GAME': {
       return {
         phase: GamePhase.SETUP,
         currentPlayer: 0,
         players: [],
         board: createInitialBoard(),
-        turnCount: 0,
+        roundCount: 0,
         gameConfig: { playerCount: 2, aiDifficulty: 'medium' },
         actionHistory: [],
         completedActions: [],

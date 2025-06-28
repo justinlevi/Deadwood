@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { checkVictoryConditions } from '../../src/game/reducer'
-import { GamePhase, type GameState } from '../../src/game/types'
+import { checkVictoryConditions, default as gameReducer } from '../../src/game/reducer'
+import { GamePhase, type GameState, ActionType } from '../../src/game/types'
 import { CHARACTERS } from '../../src/game/players'
 import { createInitialBoard } from '../../src/game/board'
 
@@ -22,7 +22,7 @@ describe('victory conditions', () => {
       currentPlayer: 0,
       players: [makePlayer(0), makePlayer(1)],
       board: createInitialBoard(),
-      turnCount: 1,
+      roundCount: 1,
       gameConfig: { playerCount: 2, aiDifficulty: 'easy' },
       actionHistory: [],
       completedActions: [],
@@ -43,7 +43,7 @@ describe('victory conditions', () => {
       currentPlayer: 0,
       players: [makePlayer(0), makePlayer(1)],
       board,
-      turnCount: 1,
+      roundCount: 1,
       gameConfig: { playerCount: 2, aiDifficulty: 'easy' },
       actionHistory: [],
       completedActions: [],
@@ -60,7 +60,7 @@ describe('victory conditions', () => {
       currentPlayer: 0,
       players: [makePlayer(0), makePlayer(1)],
       board: createInitialBoard(),
-      turnCount: 20,
+      roundCount: 20,
       gameConfig: { playerCount: 2, aiDifficulty: 'easy' },
       actionHistory: [],
       completedActions: [],
@@ -72,5 +72,29 @@ describe('victory conditions', () => {
     state.players[0].gold = 3
     state.players[1].gold = 6
     expect(checkVictoryConditions(state)).toBe(1)
+  })
+
+  it('detects victory after first action', () => {
+    const state: GameState = {
+      phase: GamePhase.PLAYER_TURN,
+      currentPlayer: 0,
+      players: [makePlayer(0)],
+      board: createInitialBoard(),
+      roundCount: 1,
+      gameConfig: { playerCount: 1, aiDifficulty: 'easy' },
+      actionHistory: [],
+      completedActions: [],
+      pendingAction: undefined,
+      message: '',
+    }
+    state.players[0].totalInfluence = 11
+    const afterSelect = gameReducer(state, {
+      type: 'SELECT_ACTION',
+      payload: ActionType.CLAIM,
+    })
+    const finalState = gameReducer(afterSelect, { type: 'CONFIRM_ACTION' })
+    expect(finalState.phase).toBe(GamePhase.GAME_OVER)
+    expect(finalState.winner).toBe(0)
+    expect(finalState.completedActions).toHaveLength(1)
   })
 })

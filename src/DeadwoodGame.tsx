@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect } from 'react'
+import React, { useReducer, useEffect, useState, useRef } from 'react'
 import {
   GamePhase,
   ActionType,
@@ -23,7 +23,7 @@ const DeadwoodGame: React.FC = () => {
     currentPlayer: 0,
     players: [],
     board: createInitialBoard(),
-    turnCount: 0,
+    roundCount: 0,
     gameConfig: { playerCount: 2, aiDifficulty: 'medium' },
     actionHistory: [],
     completedActions: [],
@@ -31,6 +31,7 @@ const DeadwoodGame: React.FC = () => {
     message: '',
   }
   const [gameState, dispatch] = useReducer(gameReducer, initialState)
+  const [isProcessingAction, setIsProcessingAction] = useState(false)
 
   // expose helpers for Playwright tests
   useEffect(() => {
@@ -40,42 +41,70 @@ const DeadwoodGame: React.FC = () => {
     ;(window as any).ActionType = ActionType
   }, [dispatch, gameState])
 
+  const aiTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+
   useEffect(() => {
+    aiTimersRef.current.forEach((t) => clearTimeout(t))
+    aiTimersRef.current = []
+
     if (
       gameState.phase === GamePhase.PLAYER_TURN &&
       gameState.players[gameState.currentPlayer]?.isAI &&
       !gameState.pendingAction &&
       gameState.completedActions.length === 0
     ) {
-      const timer = setTimeout(() => {
+      const timer1 = setTimeout(() => {
         const aiActions = generateAIActions(gameState)
-        let delay = 0
-        aiActions.forEach((action) => {
-          setTimeout(() => {
+        aiActions.forEach((action, idx) => {
+          const actionTimer = setTimeout(() => {
+            if (gameState.phase !== GamePhase.PLAYER_TURN) return
+
             dispatch({ type: 'SELECT_ACTION', payload: action.type })
+
             if (action.target !== undefined || action.amount !== undefined) {
-              setTimeout(() => {
+              const targetTimer = setTimeout(() => {
                 dispatch({
                   type: 'SET_ACTION_TARGET',
                   payload: { target: action.target, amount: action.amount },
                 })
-                setTimeout(() => dispatch({ type: 'CONFIRM_ACTION' }), 500)
+                const confirmTimer = setTimeout(() => {
+                  dispatch({ type: 'CONFIRM_ACTION' })
+                }, 500)
+                aiTimersRef.current.push(confirmTimer)
               }, 500)
+              aiTimersRef.current.push(targetTimer)
             } else if (action.type !== ActionType.REST) {
-              setTimeout(() => dispatch({ type: 'CONFIRM_ACTION' }), 500)
+              const confirmTimer = setTimeout(() => {
+                dispatch({ type: 'CONFIRM_ACTION' })
+              }, 500)
+              aiTimersRef.current.push(confirmTimer)
             }
-          }, delay)
-          delay += 2000
+          }, idx * 2000)
+          aiTimersRef.current.push(actionTimer)
         })
       }, 1500)
-      return () => clearTimeout(timer)
+      aiTimersRef.current.push(timer1)
+    }
+
+    return () => {
+      aiTimersRef.current.forEach((t) => clearTimeout(t))
+      aiTimersRef.current = []
     }
   }, [gameState])
 
   const handleActionSelect = (action: ActionType) => {
-    if (gameState.completedActions.length < 2 && !gameState.pendingAction) {
-      dispatch({ type: 'SELECT_ACTION', payload: action })
+    if (isProcessingAction) return
+    if (gameState.completedActions.length >= 2) {
+      console.warn('Cannot select action: already completed 2 actions')
+      return
     }
+    if (gameState.pendingAction) {
+      console.warn('Cannot select action: pending action in progress')
+      return
+    }
+    setIsProcessingAction(true)
+    dispatch({ type: 'SELECT_ACTION', payload: action })
+    setTimeout(() => setIsProcessingAction(false), 100)
   }
 
   const handleLocationClick = (locationId: number) => {
@@ -93,11 +122,20 @@ const DeadwoodGame: React.FC = () => {
           canChallenge(currentPlayer, p) &&
           getLocationInfluence(gameState.board[p.position], p.id) > 0
       )
-      if (validTargets.length > 0) {
+
+      if (validTargets.length === 1) {
         const targetIndex = gameState.players.indexOf(validTargets[0])
         dispatch({
           type: 'SET_ACTION_TARGET',
           payload: { target: targetIndex },
+        })
+      } else if (validTargets.length > 1) {
+        dispatch({
+          type: 'SHOW_CHALLENGE_TARGETS',
+          payload: validTargets.map((p) => ({
+            playerId: p.id,
+            playerIndex: gameState.players.indexOf(p),
+          })),
         })
       }
     }
@@ -141,12 +179,12 @@ const DeadwoodGame: React.FC = () => {
       case ActionType.CHALLENGE: {
         const cost = getChallengeCost(currentPlayer)
         if (currentPlayer.gold < cost) return false
-        const hasValidTargets = gameState.players.some(
-          (p, i) =>
-            i !== gameState.currentPlayer &&
-            canChallenge(currentPlayer, p) &&
-            gameState.board[p.position].influences[p.id] > 0
-        )
+        const hasValidTargets = gameState.players.some((p, i) => {
+          if (i === gameState.currentPlayer) return false
+          if (!canChallenge(currentPlayer, p)) return false
+          const inf = getLocationInfluence(gameState.board[p.position], p.id)
+          return inf > 0
+        })
         return hasValidTargets
       }
       case ActionType.REST:
@@ -419,18 +457,64 @@ const DeadwoodGame: React.FC = () => {
                         location,
                         currentPlayer.id
                       )
-                      const maxClaim = Math.min(
-                        currentPlayer.gold,
-                        location.maxInfluence - currentInf
-                      )
+                      const maxSpace = location.maxInfluence - currentInf
+                      const maxClaim = Math.min(currentPlayer.gold, maxSpace)
                       if (amt > maxClaim) return null
+                      const isValid = amt <= maxClaim
                       return (
-                        <option key={amt} value={amt}>
+                        <option key={amt} value={amt} disabled={!isValid}>
                           {amt} Gold = {amt} Influence
+                          {!isValid && ' (Not available)'}
                         </option>
                       )
                     })}
                   </select>
+                </div>
+              )}
+              {gameState.challengeTargets && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <div
+                    style={{
+                      marginBottom: '0.5rem',
+                      fontSize: '0.9rem',
+                      color: '#654321',
+                    }}
+                  >
+                    Select target to challenge:
+                  </div>
+                  {gameState.challengeTargets.map((target) => {
+                    const player = gameState.players.find(
+                      (p) => p.id === target.playerId
+                    )!
+                    return (
+                      <button
+                        key={target.playerId}
+                        onClick={() =>
+                          dispatch({
+                            type: 'SELECT_CHALLENGE_TARGET',
+                            payload: target.playerIndex,
+                          })
+                        }
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          marginBottom: '0.25rem',
+                          background: '#8B4513',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {player.name} - {player.character.name} (
+                        {getLocationInfluence(
+                          gameState.board[player.position],
+                          player.id
+                        )}{' '}
+                        influence)
+                      </button>
+                    )
+                  })}
                 </div>
               )}
               <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -497,7 +581,9 @@ const DeadwoodGame: React.FC = () => {
                   )}
                   isDisabled={
                     !isActionAvailable(ActionType.MOVE) ||
-                    gameState.completedActions.length >= 2
+                    gameState.completedActions.length >= 2 ||
+                    isProcessingAction ||
+                    !!gameState.pendingAction
                   }
                   onClick={() => handleActionSelect(ActionType.MOVE)}
                   cost={currentPlayer?.character.id === 'jane' ? 0 : undefined}
@@ -509,7 +595,9 @@ const DeadwoodGame: React.FC = () => {
                   )}
                   isDisabled={
                     !isActionAvailable(ActionType.CLAIM) ||
-                    gameState.completedActions.length >= 2
+                    gameState.completedActions.length >= 2 ||
+                    isProcessingAction ||
+                    !!gameState.pendingAction
                   }
                   onClick={() => handleActionSelect(ActionType.CLAIM)}
                   cost={1}
@@ -521,7 +609,9 @@ const DeadwoodGame: React.FC = () => {
                   )}
                   isDisabled={
                     !isActionAvailable(ActionType.CHALLENGE) ||
-                    gameState.completedActions.length >= 2
+                    gameState.completedActions.length >= 2 ||
+                    isProcessingAction ||
+                    !!gameState.pendingAction
                   }
                   onClick={() => handleActionSelect(ActionType.CHALLENGE)}
                   cost={getChallengeCost(currentPlayer)}
@@ -531,7 +621,11 @@ const DeadwoodGame: React.FC = () => {
                   isSelected={gameState.completedActions.some(
                     (a) => a.type === ActionType.REST
                   )}
-                  isDisabled={gameState.completedActions.length >= 2}
+                  isDisabled={
+                    gameState.completedActions.length >= 2 ||
+                    isProcessingAction ||
+                    !!gameState.pendingAction
+                  }
                   onClick={() => handleActionSelect(ActionType.REST)}
                 />
               </div>

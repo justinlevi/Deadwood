@@ -10,7 +10,7 @@ const initialState: GameState = {
   currentPlayer: 0,
   players: createPlayers(2),
   board: createInitialBoard(),
-  turnCount: 1,
+  roundCount: 1,
   gameConfig: { playerCount: 2, aiDifficulty: 'easy' },
   actionHistory: [],
   completedActions: [],
@@ -25,3 +25,27 @@ describe('gameReducer', () => {
     expect(state.players[0].gold).toBe(5)
   })
 })
+it('handles challenge target by index', () => {
+  const state: GameState = {
+    phase: GamePhase.PLAYER_TURN,
+    currentPlayer: 0,
+    players: [
+      { ...createPlayers(2)[0], id: 'player-0', position: 0, gold: 3, totalInfluence: 0 },
+      { ...createPlayers(2)[1], id: 'player-1', position: 0, gold: 3, totalInfluence: 2 }
+    ],
+    board: [{ ...createInitialBoard()[0], influences: { 'player-1': 2 }, id: 0 }],
+    roundCount: 1,
+    gameConfig: { playerCount: 2, aiDifficulty: 'easy' },
+    actionHistory: [],
+    completedActions: [],
+    pendingAction: undefined,
+    message: ''
+  }
+
+  const afterSelect = gameReducer(state, { type: 'SELECT_ACTION', payload: ActionType.CHALLENGE })
+  const afterTarget = gameReducer(afterSelect, { type: 'SET_ACTION_TARGET', payload: { target: 1 } })
+  const finalState = gameReducer(afterTarget, { type: 'CONFIRM_ACTION' })
+  expect(finalState.players[1].totalInfluence).toBe(1)
+  expect(finalState.board[0].influences['player-1']).toBe(1)
+})
+

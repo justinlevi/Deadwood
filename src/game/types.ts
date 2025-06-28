@@ -39,13 +39,14 @@ export interface GameState {
   currentPlayer: number
   players: Player[]
   board: Location[]
-  turnCount: number
+  roundCount: number
   gameConfig: GameConfig
   actionHistory: Action[]
   winner?: number
   completedActions: PendingAction[]
   pendingAction?: PendingAction
   message: string
+  challengeTargets?: Array<{ playerId: string; playerIndex: number }>
 }
 
 export const GamePhase = {
@@ -84,3 +85,8 @@ export type GameAction =
   | { type: 'SET_STATE'; payload: GameState }
   | { type: 'RESET_GAME' }
   | { type: 'SET_MESSAGE'; payload: string }
+  | {
+      type: 'SHOW_CHALLENGE_TARGETS'
+      payload: Array<{ playerId: string; playerIndex: number }>
+    }
+  | { type: 'SELECT_CHALLENGE_TARGET'; payload: number }

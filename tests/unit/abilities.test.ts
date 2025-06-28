@@ -22,7 +22,7 @@ describe('character abilities', () => {
       currentPlayer: 1,
       players: [makePlayer(0, 1), makePlayer(1, 2)],
       board: createInitialBoard(),
-      turnCount: 1,
+      roundCount: 1,
       gameConfig: { playerCount: 2, aiDifficulty: 'easy' },
       actionHistory: [],
       completedActions: [],

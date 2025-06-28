@@ -10,7 +10,7 @@ const setupState = (): GameState => ({
   currentPlayer: 1,
   players: createPlayers(2),
   board: createInitialBoard(),
-  turnCount: 1,
+  roundCount: 1,
   gameConfig: { playerCount: 2, aiDifficulty: 'easy' },
   actionHistory: [],
   completedActions: [],
