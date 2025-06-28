@@ -41,11 +41,15 @@ const DeadwoodGame: React.FC = () => {
     ;(window as any).ActionType = ActionType
   }, [dispatch, gameState])
 
-  const aiTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+  const aiTimersRef = useRef<NodeJS.Timeout[]>([])
 
   useEffect(() => {
-    aiTimersRef.current.forEach((t) => clearTimeout(t))
-    aiTimersRef.current = []
+    const clearAllTimers = () => {
+      aiTimersRef.current.forEach((timer) => clearTimeout(timer))
+      aiTimersRef.current = []
+    }
+
+    clearAllTimers()
 
     if (
       gameState.phase === GamePhase.PLAYER_TURN &&
@@ -53,9 +57,12 @@ const DeadwoodGame: React.FC = () => {
       !gameState.pendingAction &&
       gameState.completedActions.length === 0
     ) {
-      const timer1 = setTimeout(() => {
+      const mainTimer = setTimeout(() => {
+        if (gameState.phase !== GamePhase.PLAYER_TURN) return
+
         const aiActions = generateAIActions(gameState)
-        aiActions.forEach((action, idx) => {
+
+        aiActions.forEach((action, index) => {
           const actionTimer = setTimeout(() => {
             if (gameState.phase !== GamePhase.PLAYER_TURN) return
 
@@ -63,34 +70,43 @@ const DeadwoodGame: React.FC = () => {
 
             if (action.target !== undefined || action.amount !== undefined) {
               const targetTimer = setTimeout(() => {
+                if (gameState.phase !== GamePhase.PLAYER_TURN) return
+
                 dispatch({
                   type: 'SET_ACTION_TARGET',
                   payload: { target: action.target, amount: action.amount },
                 })
+
                 const confirmTimer = setTimeout(() => {
+                  if (gameState.phase !== GamePhase.PLAYER_TURN) return
                   dispatch({ type: 'CONFIRM_ACTION' })
                 }, 500)
+
                 aiTimersRef.current.push(confirmTimer)
               }, 500)
+
               aiTimersRef.current.push(targetTimer)
             } else if (action.type !== ActionType.REST) {
               const confirmTimer = setTimeout(() => {
+                if (gameState.phase !== GamePhase.PLAYER_TURN) return
                 dispatch({ type: 'CONFIRM_ACTION' })
               }, 500)
+
               aiTimersRef.current.push(confirmTimer)
             }
-          }, idx * 2000)
+          }, index * 2000)
+
           aiTimersRef.current.push(actionTimer)
         })
       }, 1500)
-      aiTimersRef.current.push(timer1)
+
+      aiTimersRef.current.push(mainTimer)
     }
 
     return () => {
-      aiTimersRef.current.forEach((t) => clearTimeout(t))
-      aiTimersRef.current = []
+      clearAllTimers()
     }
-  }, [gameState])
+  }, [gameState, dispatch])
 
   const handleActionSelect = (action: ActionType) => {
     if (isProcessingAction) return
