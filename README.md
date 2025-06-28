@@ -117,8 +117,8 @@ Each turn, players must select exactly **2 actions** from:
 
 ### Al Swearengen - *The Gem Saloon Owner*
 
-- **Ability**: Gains +1 gold whenever any player enters the Gem Saloon
-- **Strategy**: Control the Gem Saloon and encourage movement there
+- **Ability**: Gains +1 gold whenever another player enters the Gem Saloon
+  - **Strategy**: Control the Gem Saloon and encourage movement there
 - **Strength**: Passive gold generation
 
 ### Seth Bullock - *The Sheriff*
