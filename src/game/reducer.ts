@@ -2,12 +2,7 @@ import type { GameState, PendingAction, GameAction } from './types'
 import { GamePhase, ActionType } from './types'
 import { createPlayers } from './players'
 import { createInitialBoard } from './board'
-import {
-  getMoveCost,
-  getChallengeCost,
-  getLocationInfluence,
-  canChallenge,
-} from './utils'
+import { getMoveCost, getChallengeCost, getLocationInfluence } from './utils'
 
 export const checkVictoryConditions = (
   state: GameState
