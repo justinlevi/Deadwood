@@ -274,7 +274,7 @@ The game ends immediately when a player achieves either:
 
 ### Prerequisites
 
-- Node.js 14+ and npm/yarn
+- Node.js 20+ and npm/yarn
 - Basic knowledge of React development
 
 ### Quick Start
