@@ -8,7 +8,7 @@ async function startGame(page) {
   })
   await page.goto('/')
   await page.getByRole('button', { name: 'Start Game' }).click()
-  await expect(page.locator('text=Round 1')).toBeVisible()
+  await expect(page.locator('text=Round 1 •')).toBeVisible()
 }
 
 function getCurrentPlayerInfo(page) {
@@ -30,7 +30,7 @@ test('starting the game with default options', async ({ page }) => {
   await expect(selects.nth(0)).toHaveValue('2')
   await expect(selects.nth(1)).toHaveValue('medium')
   await page.getByRole('button', { name: 'Start Game' }).click()
-  await expect(page.locator('text=Round 1')).toBeVisible()
+  await expect(page.locator('text=Round 1 •')).toBeVisible()
 })
 
 test('moving to another location and claiming influence', async ({ page }) => {
