@@ -6,9 +6,23 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run && playwright test",
+    "postinstall": "playwright install --with-deps",
+    "lint": "prettier --check .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.53.1",
+    "@types/react": "^18.2.24",
+    "@types/react-dom": "^18.2.11",
+    "@vitejs/plugin-react": "^4.1.0",
+    "prettier": "^3.6.2",
+    "vitest": "^1.5.1",
     "typescript": "~5.8.3",
     "vite": "^7.0.0"
   }
