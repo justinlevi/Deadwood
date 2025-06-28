@@ -34,4 +34,40 @@ describe('character abilities', () => {
     expect(newState.players[1].position).toBe(0)
     expect(newState.players[1].gold).toBe(2)
   })
+
+  it("Al Swearengen doesn't gain gold when he enters Gem Saloon", () => {
+    const state: GameState = {
+      phase: GamePhase.PLAYER_TURN,
+      currentPlayer: 0,
+      players: [makePlayer(0, 1), makePlayer(1, 2)],
+      board: createInitialBoard(),
+      roundCount: 1,
+      gameConfig: { playerCount: 2, aiDifficulty: 'easy' },
+      actionHistory: [],
+      completedActions: [],
+      pendingAction: undefined,
+      message: '',
+    }
+    const newState = executeAction(state, { type: ActionType.MOVE, target: 0 })
+    expect(newState.players[0].position).toBe(0)
+    expect(newState.players[0].gold).toBe(3)
+  })
+
+  it("Non-Al players don't trigger bonus when Al isn't in game", () => {
+    const state: GameState = {
+      phase: GamePhase.PLAYER_TURN,
+      currentPlayer: 0,
+      players: [makePlayer(1, 1), makePlayer(2, 2)],
+      board: createInitialBoard(),
+      roundCount: 1,
+      gameConfig: { playerCount: 2, aiDifficulty: 'easy' },
+      actionHistory: [],
+      completedActions: [],
+      pendingAction: undefined,
+      message: '',
+    }
+    const newState = executeAction(state, { type: ActionType.MOVE, target: 0 })
+    expect(newState.players[0].position).toBe(0)
+    expect(newState.players[0].gold).toBe(3)
+  })
 })

@@ -133,40 +133,33 @@ export const executeAction = (
     case ActionType.CHALLENGE: {
       if (action.target === undefined) break
 
+      // Validate target index
       if (action.target < 0 || action.target >= newPlayers.length) {
         console.error('Invalid challenge target index:', action.target)
         break
       }
 
+      const challengeCost = getChallengeCost(currentPlayer)
       const targetPlayer = newPlayers[action.target]
-      if (!targetPlayer) break
-
       const location = newBoard[targetPlayer.position]
       const targetInfluence = getLocationInfluence(location, targetPlayer.id)
 
-      if (targetInfluence <= 0) {
-        console.warn('Cannot challenge: target has no influence at location')
-        break
-      }
-
-      const challengeCost = getChallengeCost(currentPlayer)
-
-      newBoard[targetPlayer.position] = {
-        ...location,
-        influences: {
-          ...location.influences,
-          [targetPlayer.id]: targetInfluence - 1,
-        },
-      }
-
-      newPlayers[action.target] = {
-        ...targetPlayer,
-        totalInfluence: targetPlayer.totalInfluence - 1,
-      }
-
-      newPlayers[state.currentPlayer] = {
-        ...currentPlayer,
-        gold: currentPlayer.gold - challengeCost,
+      if (targetInfluence > 0) {
+        newBoard[targetPlayer.position] = {
+          ...location,
+          influences: {
+            ...location.influences,
+            [targetPlayer.id]: targetInfluence - 1,
+          },
+        }
+        newPlayers[action.target] = {
+          ...targetPlayer,
+          totalInfluence: targetPlayer.totalInfluence - 1,
+        }
+        newPlayers[state.currentPlayer] = {
+          ...currentPlayer,
+          gold: currentPlayer.gold - challengeCost,
+        }
       }
       break
     }
