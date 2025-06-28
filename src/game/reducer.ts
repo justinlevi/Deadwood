@@ -152,16 +152,42 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const currentPlayer = state.players[state.currentPlayer]
       if (actionType === ActionType.REST) {
         const newState = executeAction(state, { type: ActionType.REST })
+        const newCompleted = [
+          ...state.completedActions,
+          { type: ActionType.REST },
+        ]
+
+        if (newCompleted.length >= 2) {
+          const winner = checkVictoryConditions(newState)
+          if (winner !== undefined) {
+            return {
+              ...newState,
+              phase: GamePhase.GAME_OVER,
+              winner,
+              completedActions: newCompleted,
+              pendingAction: undefined,
+              message: `${newState.players[winner].name} wins!`,
+            }
+          }
+          const nextPlayer = (state.currentPlayer + 1) % state.players.length
+          const isNewRound = nextPlayer === 0
+          return {
+            ...newState,
+            currentPlayer: nextPlayer,
+            turnCount: isNewRound ? state.turnCount + 1 : state.turnCount,
+            completedActions: [],
+            pendingAction: undefined,
+            message:
+              `Turn ${isNewRound ? state.turnCount + 1 : state.turnCount} • ` +
+              `${newState.players[nextPlayer].character.name}'s turn`,
+          }
+        }
+
         return {
           ...newState,
-          completedActions: [
-            ...state.completedActions,
-            { type: ActionType.REST },
-          ],
-          message:
-            state.completedActions.length === 0
-              ? 'Select your final action'
-              : 'Turn complete!',
+          completedActions: newCompleted,
+          pendingAction: undefined,
+          message: 'Select your final action',
         }
       }
       if (actionType === ActionType.CLAIM) {
