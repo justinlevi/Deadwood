@@ -279,21 +279,19 @@ The game ends immediately when a player achieves either:
 
 ### Quick Start
 
-1. Create a new React app:
+1. Install dependencies:
 
 ```bash
-npx create-react-app deadwood-showdown --template typescript
-cd deadwood-showdown
+npm ci
 ```
 
-1. Replace the contents of `src/App.tsx` with the game component
 1. Start the development server:
 
 ```bash
-npm start
+npm run dev
 ```
 
-1. Open <http://localhost:3000> to play
+1. Open <http://localhost:5173> (or the port shown in the terminal) to play
 
 ### Building for Production
 

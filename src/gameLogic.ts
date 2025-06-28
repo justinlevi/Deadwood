@@ -402,7 +402,43 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
   }
 }
 
-export const generateAIActions = (state: GameState): PendingAction[] => {
+const getRandomElement = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
+
+const generateEasyAIActions = (state: GameState): PendingAction[] => {
+  const currentPlayer = state.players[state.currentPlayer]
+  const actions: PendingAction[] = []
+  const possibleActions: PendingAction[] = []
+  const location = state.board[currentPlayer.position]
+  const currentInfluence = getLocationInfluence(location, currentPlayer.id)
+  const claimAmount = Math.min(1, Math.min(currentPlayer.gold, location.maxInfluence - currentInfluence))
+  if (claimAmount > 0) {
+    possibleActions.push({ type: ActionType.CLAIM, amount: claimAmount })
+  }
+  if (currentPlayer.gold >= getChallengeCost(currentPlayer)) {
+    const validTargets = state.players.filter((p, i) => i !== state.currentPlayer && canChallenge(currentPlayer, p) && state.board[p.position].influences[p.id] > 0)
+    if (validTargets.length > 0) {
+      const target = getRandomElement(validTargets)
+      possibleActions.push({ type: ActionType.CHALLENGE, target: state.players.indexOf(target) })
+    }
+  }
+  LOCATIONS[currentPlayer.position].adjacent.forEach((id) => {
+    if (getMoveCost(currentPlayer, currentPlayer.position, id) <= currentPlayer.gold) {
+      possibleActions.push({ type: ActionType.MOVE, target: id })
+    }
+  })
+  if (currentPlayer.gold < 2) {
+    possibleActions.push({ type: ActionType.REST })
+  }
+  while (actions.length < 2 && possibleActions.length > 0) {
+    const choice = getRandomElement(possibleActions)
+    actions.push(choice)
+    possibleActions.splice(possibleActions.indexOf(choice), 1)
+  }
+  while (actions.length < 2) actions.push({ type: ActionType.REST })
+  return actions
+}
+
+const generateMediumAIActions = (state: GameState): PendingAction[] => {
   const currentPlayer = state.players[state.currentPlayer]
   const actions: PendingAction[] = []
   const location = state.board[currentPlayer.position]
@@ -427,4 +463,55 @@ export const generateAIActions = (state: GameState): PendingAction[] => {
     }
   }
   return actions.slice(0, 2)
+}
+
+const generateHardAIActions = (state: GameState): PendingAction[] => {
+  const currentPlayer = state.players[state.currentPlayer]
+  const actions: PendingAction[] = []
+  const location = state.board[currentPlayer.position]
+  const currentInfluence = getLocationInfluence(location, currentPlayer.id)
+  const maxClaim = Math.min(currentPlayer.gold, location.maxInfluence - currentInfluence)
+  if (maxClaim > 0) {
+    actions.push({ type: ActionType.CLAIM, amount: Math.min(3, maxClaim) })
+  }
+  if (currentPlayer.gold >= getChallengeCost(currentPlayer)) {
+    const validTargets = state.players
+      .filter((p, i) => i !== state.currentPlayer && canChallenge(currentPlayer, p) && state.board[p.position].influences[p.id] > 0)
+      .sort((a, b) => getLocationInfluence(state.board[b.position], b.id) - getLocationInfluence(state.board[a.position], a.id))
+    if (validTargets.length > 0) {
+      actions.push({ type: ActionType.CHALLENGE, target: state.players.indexOf(validTargets[0]) })
+    }
+  }
+  while (actions.length < 2) {
+    if (currentPlayer.gold < 2) {
+      actions.push({ type: ActionType.REST })
+    } else {
+      const targetLoc = LOCATIONS.reduce((best, loc) => {
+        const influence = getLocationInfluence(loc, currentPlayer.id)
+        if (best === null) return loc
+        const bestInfluence = getLocationInfluence(best, currentPlayer.id)
+        if (influence < bestInfluence) return loc
+        return best
+      }, null as any)
+      if (targetLoc && targetLoc.id !== currentPlayer.position && getMoveCost(currentPlayer, currentPlayer.position, targetLoc.id) <= currentPlayer.gold) {
+        actions.push({ type: ActionType.MOVE, target: targetLoc.id })
+      } else {
+        const adjacentLocs = LOCATIONS[currentPlayer.position].adjacent
+        const target = adjacentLocs[Math.floor(Math.random() * adjacentLocs.length)]
+        actions.push({ type: ActionType.MOVE, target })
+      }
+    }
+  }
+  return actions.slice(0, 2)
+}
+
+export const generateAIActions = (state: GameState): PendingAction[] => {
+  switch (state.gameConfig.aiDifficulty) {
+    case 'easy':
+      return generateEasyAIActions(state)
+    case 'hard':
+      return generateHardAIActions(state)
+    default:
+      return generateMediumAIActions(state)
+  }
 }
