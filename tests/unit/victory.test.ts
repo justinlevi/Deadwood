@@ -98,3 +98,107 @@ describe('victory conditions', () => {
     expect(finalState.completedActions).toHaveLength(1)
   })
 })
+
+describe('victory condition timing', () => {
+  const makePlayerWith = (charIndex: number, influence = 0, gold = 3) => ({
+    id: `p${charIndex}`,
+    name: `P${charIndex}`,
+    character: CHARACTERS[charIndex],
+    position: 0,
+    gold,
+    totalInfluence: influence,
+    isAI: false,
+    actionsRemaining: 2,
+  })
+
+  it('detects influence victory after first action', () => {
+    const board = createInitialBoard()
+    board[0].influences = { p0: 2 }
+
+    const state: GameState = {
+      phase: GamePhase.PLAYER_TURN,
+      currentPlayer: 0,
+      players: [makePlayerWith(0, 11, 3), makePlayerWith(1, 0, 3)],
+      board,
+      roundCount: 1,
+      gameConfig: { playerCount: 2, aiDifficulty: 'medium' },
+      actionHistory: [],
+      completedActions: [],
+      pendingAction: { type: ActionType.CLAIM, amount: 1 },
+      message: '',
+    }
+
+    const newState = gameReducer(state, { type: 'CONFIRM_ACTION' })
+
+    expect(newState.phase).toBe(GamePhase.GAME_OVER)
+    expect(newState.winner).toBe(0)
+    expect(newState.completedActions).toHaveLength(1)
+    expect(newState.message).toContain('wins!')
+  })
+
+  it('detects location control victory after first action', () => {
+    const board = createInitialBoard()
+    board[0].influences = { p0: 3 }
+    board[1].influences = { p0: 3 }
+    board[2].influences = { p0: 2 }
+
+    const state: GameState = {
+      phase: GamePhase.PLAYER_TURN,
+      currentPlayer: 0,
+      players: [{ ...makePlayerWith(0, 8, 3), position: 2 }, makePlayerWith(1, 0, 3)],
+      board,
+      roundCount: 1,
+      gameConfig: { playerCount: 2, aiDifficulty: 'medium' },
+      actionHistory: [],
+      completedActions: [],
+      pendingAction: { type: ActionType.CLAIM, amount: 1 },
+      message: '',
+    }
+
+    const newState = gameReducer(state, { type: 'CONFIRM_ACTION' })
+
+    expect(newState.phase).toBe(GamePhase.GAME_OVER)
+    expect(newState.winner).toBe(0)
+  })
+
+  it('continues game when no victory after first action', () => {
+    const state: GameState = {
+      phase: GamePhase.PLAYER_TURN,
+      currentPlayer: 0,
+      players: [makePlayerWith(0, 5, 3), makePlayerWith(1, 0, 3)],
+      board: createInitialBoard(),
+      roundCount: 1,
+      gameConfig: { playerCount: 2, aiDifficulty: 'medium' },
+      actionHistory: [],
+      completedActions: [],
+      pendingAction: { type: ActionType.REST },
+      message: '',
+    }
+
+    const newState = gameReducer(state, { type: 'SELECT_ACTION', payload: ActionType.REST })
+
+    expect(newState.phase).toBe(GamePhase.PLAYER_TURN)
+    expect(newState.currentPlayer).toBe(0)
+    expect(newState.completedActions).toHaveLength(1)
+    expect(newState.message).toBe('Select your final action')
+  })
+
+  it('checks victory after rest as first action', () => {
+    const state: GameState = {
+      phase: GamePhase.PLAYER_TURN,
+      currentPlayer: 0,
+      players: [makePlayerWith(0, 12, 3), makePlayerWith(1, 0, 3)],
+      board: createInitialBoard(),
+      roundCount: 1,
+      gameConfig: { playerCount: 2, aiDifficulty: 'medium' },
+      actionHistory: [],
+      completedActions: [],
+      message: '',
+    }
+
+    const newState = gameReducer(state, { type: 'SELECT_ACTION', payload: ActionType.REST })
+
+    expect(newState.phase).toBe(GamePhase.GAME_OVER)
+    expect(newState.winner).toBe(0)
+  })
+})
