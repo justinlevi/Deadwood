@@ -42,9 +42,11 @@ export const checkVictoryConditions = (
 }
 
 const checkAndHandleVictory = (
+  _state: GameState,
   newState: GameState,
   completedActions: PendingAction[]
 ): GameState | null => {
+  void _state
   const winner = checkVictoryConditions(newState)
   if (winner !== undefined) {
     return {
@@ -205,10 +207,14 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           ...state.completedActions,
           { type: ActionType.REST },
         ]
+        const victoryState = checkAndHandleVictory(
+          state,
+          newState,
+          newCompleted
+        )
+        if (victoryState) return victoryState
 
         if (newCompleted.length >= 2) {
-          const victoryState = checkAndHandleVictory(newState, newCompleted)
-          if (victoryState) return victoryState
           const nextPlayer = (state.currentPlayer + 1) % state.players.length
           const isNewRound = nextPlayer === 0
           return {
@@ -278,7 +284,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ...state.completedActions,
         state.pendingAction,
       ]
-      const victoryState = checkAndHandleVictory(newState, newCompletedActions)
+      const victoryState = checkAndHandleVictory(
+        state,
+        newState,
+        newCompletedActions
+      )
       if (victoryState) return victoryState
 
       if (newCompletedActions.length >= 2) {
