@@ -192,6 +192,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       }
     }
     case 'SELECT_ACTION': {
+      if (state.phase !== GamePhase.PLAYER_TURN) {
+        console.warn('Cannot select action: not in player turn phase')
+        return state
+      }
       const actionType = action.payload
       const currentPlayer = state.players[state.currentPlayer]
       if (actionType === ActionType.REST) {
