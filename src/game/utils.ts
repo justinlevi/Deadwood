@@ -30,3 +30,36 @@ export const getLocationInfluence = (
 ): number => {
   return location.influences[playerId] || 0
 }
+
+export const getPlayerSafe = (
+  players: Player[],
+  index: number
+): Player | undefined => {
+  if (index < 0 || index >= players.length) {
+    console.error(`Invalid player index: ${index}`)
+    return undefined
+  }
+  return players[index]
+}
+
+export const getLocationSafe = (
+  board: Location[],
+  index: number
+): Location | undefined => {
+  if (index < 0 || index >= board.length) {
+    console.error(`Invalid location index: ${index}`)
+    return undefined
+  }
+  return board[index]
+}
+
+export const findPlayerIndex = (
+  players: Player[],
+  playerId: string
+): number => {
+  const idx = players.findIndex((p) => p.id === playerId)
+  if (idx === -1) {
+    console.error(`Player not found: ${playerId}`)
+  }
+  return idx
+}

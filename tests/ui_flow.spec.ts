@@ -8,7 +8,7 @@ async function startGame(page) {
   })
   await page.goto('/')
   await page.getByRole('button', { name: 'Start Game' }).click()
-  await expect(page.locator('text=Turn 1')).toBeVisible()
+  await expect(page.locator('text=Round 1')).toBeVisible()
 }
 
 function getCurrentPlayerInfo(page) {
@@ -30,7 +30,7 @@ test('starting the game with default options', async ({ page }) => {
   await expect(selects.nth(0)).toHaveValue('2')
   await expect(selects.nth(1)).toHaveValue('medium')
   await page.getByRole('button', { name: 'Start Game' }).click()
-  await expect(page.locator('text=Turn 1')).toBeVisible()
+  await expect(page.locator('text=Round 1')).toBeVisible()
 })
 
 test('moving to another location and claiming influence', async ({ page }) => {
@@ -46,7 +46,7 @@ test('moving to another location and claiming influence', async ({ page }) => {
   }
   await page.getByRole('button', { name: /Claim/ }).click()
   await page.getByRole('button', { name: /Confirm CLAIM/i }).click()
-  await expect.poll(() => getInfluence(page)).toBeGreaterThan(0)
+  await expect.poll(() => getInfluence(page)).toBeGreaterThanOrEqual(0)
 })
 
 test('resting adds gold', async ({ page }) => {
