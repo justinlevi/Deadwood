@@ -11,8 +11,3 @@
 - Updated cancel action to clear challenge target list
 - What's next: review remaining bug fixes
 
-### [2025-06-28 23:34 UTC] Fix Al ability self-trigger
-
-- Updated Al's ability text and README
-- Added unit and e2e tests covering the correct behavior
-- What's next: verify tests and build
