@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "default_branch": "main",
+  "tests": {
+    "test_command": "npm test"
+  }
+}
