@@ -77,6 +77,8 @@ export const executeAction = (
   }
   const newBoard = [...state.board]
   const newPlayers = [...state.players]
+  let logEntry: string | null = null
+  let executed = false
   switch (action.type) {
     case ActionType.MOVE: {
       if (action.target === undefined) break
@@ -104,6 +106,8 @@ export const executeAction = (
           }
         }
       }
+      logEntry = `${currentPlayer.name} moved to ${targetLocation.name} (-${moveCost}g). ${currentPlayer.isAI ? 'AI repositioning to a better location.' : 'Player choice.'}`
+      executed = true
       break
     }
     case ActionType.CLAIM: {
@@ -143,6 +147,8 @@ export const executeAction = (
         gold: currentPlayer.gold - actualAmount,
         totalInfluence: currentPlayer.totalInfluence + actualAmount,
       }
+      logEntry = `${currentPlayer.name} claimed ${actualAmount} influence at ${location.name} (-${actualAmount}g). ${currentPlayer.isAI ? 'AI wants more influence.' : 'Player decision.'}`
+      executed = true
       break
     }
     case ActionType.CHALLENGE: {
@@ -202,6 +208,8 @@ export const executeAction = (
         gold: currentPlayer.gold - challengeCost,
       }
 
+      logEntry = `${currentPlayer.name} challenged ${targetPlayer.name} at ${location.name} (-${challengeCost}g). ${currentPlayer.isAI ? 'AI attempts to weaken an opponent.' : 'Player chose to challenge.'}`
+      executed = true
       break
     }
     case ActionType.REST: {
@@ -209,10 +217,18 @@ export const executeAction = (
         ...currentPlayer,
         gold: currentPlayer.gold + 2,
       }
+      logEntry = `${currentPlayer.name} rested and gained 2g. ${currentPlayer.isAI ? 'AI needed more gold.' : 'Player opted to rest.'}`
+      executed = true
       break
     }
   }
-  return { ...state, board: newBoard, players: newPlayers }
+  if (!executed) return state
+  return {
+    ...state,
+    board: newBoard,
+    players: newPlayers,
+    actionLog: [...(state.actionLog || []), ...(logEntry ? [logEntry] : [])],
+  }
 }
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {
@@ -227,6 +243,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         roundCount: 1,
         gameConfig: action.payload,
         actionHistory: [],
+        actionLog: [],
         completedActions: [],
         pendingAction: undefined,
         message: `Round 1 • ${players[0].character.name}'s turn`,
@@ -496,6 +513,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         roundCount: 1,
         gameConfig: { playerCount: 2, aiDifficulty: 'medium' },
         actionHistory: [],
+        actionLog: [],
         completedActions: [],
         pendingAction: undefined,
         message: '',

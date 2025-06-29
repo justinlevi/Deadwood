@@ -27,6 +27,7 @@ const DeadwoodGame: React.FC = () => {
     roundCount: 1,
     gameConfig: { playerCount: 2, aiDifficulty: 'medium' },
     actionHistory: [],
+    actionLog: [],
     completedActions: [],
     pendingAction: undefined,
     message: '',
@@ -760,6 +761,27 @@ const DeadwoodGame: React.FC = () => {
             >
               {`Selected: ${gameState.completedActions.length}/2 actions`}
             </div>
+            {gameState.actionLog && (
+              <div
+                tabIndex={-1}
+                style={{
+                  maxHeight: '100px',
+                  overflowY: 'auto',
+                  marginTop: '0.5rem',
+                  fontSize: '0.75rem',
+                  background: '#FFF8DC',
+                  color: '#654321',
+                  border: '1px solid #8B4513',
+                  padding: '0.5rem',
+                }}
+              >
+                {gameState.actionLog.map((entry, i) => (
+                  <div key={i} style={{ marginBottom: '0.25rem' }}>
+                    {entry}
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         </div>
       )}
