@@ -92,3 +92,8 @@
 - Updated LocationCard to style influence stars using each player's color
 - Adjusted unit and e2e tests for new property
 - What's next: ensure tests and build succeed
+
+### [2025-06-29 17:47 UTC] Add influence persistence test
+
+- Created Playwright spec to ensure claim stars remain visible after reaching three influence
+- What's next: verify tests and build succeed
