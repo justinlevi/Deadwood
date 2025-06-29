@@ -10,6 +10,7 @@ import {
   canChallenge,
   getLocationInfluence,
 } from './game'
+import { getPlayerSafe, getLocationSafe } from './game/utils'
 import gameReducer from './game/reducer'
 import generateAIActions from './game/ai'
 import GameSetup from './components/GameSetup'
@@ -36,6 +37,25 @@ const DeadwoodGame: React.FC = () => {
     new Set()
   )
 
+  const currentPlayer = getPlayerSafe(
+    gameState.players,
+    gameState.currentPlayer
+  )
+
+  if (!currentPlayer && gameState.phase === GamePhase.PLAYER_TURN) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>
+        Error: Invalid game state - current player not found
+        <button
+          onClick={() => dispatch({ type: 'RESET_GAME' })}
+          style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}
+        >
+          Reset Game
+        </button>
+      </div>
+    )
+  }
+
   // expose helpers for Playwright tests
   useEffect(() => {
     ;(window as any).dispatchGameAction = dispatch
@@ -57,7 +77,7 @@ const DeadwoodGame: React.FC = () => {
 
     if (
       gameState.phase === GamePhase.PLAYER_TURN &&
-      gameState.players[gameState.currentPlayer]?.isAI &&
+      currentPlayer?.isAI &&
       !gameState.pendingAction &&
       gameState.completedActions.length === 0
     ) {
@@ -115,7 +135,7 @@ const DeadwoodGame: React.FC = () => {
   useEffect(() => {
     if (
       gameState.phase !== GamePhase.PLAYER_TURN ||
-      gameState.players[gameState.currentPlayer]?.isAI ||
+      currentPlayer?.isAI ||
       gameState.completedActions.length >= 2
     ) {
       setIsProcessingAction(false)
@@ -169,14 +189,19 @@ const DeadwoodGame: React.FC = () => {
     if (gameState.pendingAction.type === ActionType.MOVE) {
       dispatch({ type: 'SET_ACTION_TARGET', payload: { target: locationId } })
     } else if (gameState.pendingAction.type === ActionType.CHALLENGE) {
+      const location = getLocationSafe(gameState.board, locationId)
+      if (!location) {
+        console.error('Invalid location clicked')
+        return
+      }
       const playersAtLocation = gameState.players.filter(
         (p) => p.position === locationId
       )
-      const currentPlayer = gameState.players[gameState.currentPlayer]
+      const cp = currentPlayer!
       const validTargets = playersAtLocation.filter(
         (p) =>
-          p.id !== currentPlayer.id &&
-          canChallenge(currentPlayer, p) &&
+          p.id !== cp.id &&
+          canChallenge(cp, p) &&
           getLocationInfluence(gameState.board[p.position], p.id) > 0
       )
 
@@ -208,11 +233,12 @@ const DeadwoodGame: React.FC = () => {
     if (gameState.pendingAction?.type !== ActionType.CLAIM) return null
 
     const amount = gameState.pendingAction.amount || 1
-    const currentPlayer = gameState.players[gameState.currentPlayer]
-    const location = gameState.board[currentPlayer.position]
-    const currentInf = getLocationInfluence(location, currentPlayer.id)
+    const current = currentPlayer!
+    const location = getLocationSafe(gameState.board, current.position)
+    if (!location) return { valid: false, message: 'Invalid location' }
+    const currentInf = getLocationInfluence(location, current.id)
     const maxSpace = location.maxInfluence - currentInf
-    const maxAffordable = currentPlayer.gold
+    const maxAffordable = current.gold
 
     if (amount > maxAffordable) {
       return { valid: false, message: 'Not enough gold' }
@@ -229,41 +255,43 @@ const DeadwoodGame: React.FC = () => {
 
   const getValidChallengeTargets = (): string[] => {
     if (gameState.pendingAction?.type !== ActionType.CHALLENGE) return []
-    const currentPlayer = gameState.players[gameState.currentPlayer]
+    const current = currentPlayer!
     return gameState.players
-      .filter(
-        (p) =>
-          p.id !== currentPlayer.id &&
-          canChallenge(currentPlayer, p) &&
-          getLocationInfluence(gameState.board[p.position], p.id) > 0
-      )
+      .filter((p, index) => {
+        if (index === gameState.currentPlayer) return false
+        if (!canChallenge(current, p)) return false
+        const location = getLocationSafe(gameState.board, p.position)
+        if (!location) return false
+        const inf = getLocationInfluence(location, p.id)
+        return p.id !== current.id && inf > 0
+      })
       .map((p) => p.id)
   }
 
   const isActionAvailable = (action: ActionType): boolean => {
-    const currentPlayer = gameState.players[gameState.currentPlayer]
-    if (!currentPlayer) return false
+    const current = currentPlayer
+    if (!current) return false
     switch (action) {
       case ActionType.MOVE:
         return true
       case ActionType.CLAIM: {
-        const location = gameState.board[currentPlayer.position]
-        const currentInfluence = getLocationInfluence(
-          location,
-          currentPlayer.id
-        )
+        const location = getLocationSafe(gameState.board, current.position)
+        if (!location) return false
+        const currentInfluence = getLocationInfluence(location, current.id)
         const hasSpace = currentInfluence < location.maxInfluence
-        const hasGold = currentPlayer.gold >= 1
+        const hasGold = current.gold >= 1
 
         return hasSpace && hasGold
       }
       case ActionType.CHALLENGE: {
-        const cost = getChallengeCost(currentPlayer)
-        if (currentPlayer.gold < cost) return false
+        const cost = getChallengeCost(current)
+        if (current.gold < cost) return false
         const hasValidTargets = gameState.players.some((p, i) => {
           if (i === gameState.currentPlayer) return false
-          if (!canChallenge(currentPlayer, p)) return false
-          const inf = getLocationInfluence(gameState.board[p.position], p.id)
+          if (!canChallenge(current, p)) return false
+          const location = getLocationSafe(gameState.board, p.position)
+          if (!location) return false
+          const inf = getLocationInfluence(location, p.id)
           return inf > 0
         })
         return hasValidTargets
@@ -293,7 +321,6 @@ const DeadwoodGame: React.FC = () => {
     )
   }
 
-  const currentPlayer = gameState.players[gameState.currentPlayer]
   const isHumanTurn = currentPlayer && !currentPlayer.isAI
   const validChallengeTargets = getValidChallengeTargets()
 
@@ -544,13 +571,17 @@ const DeadwoodGame: React.FC = () => {
                     }}
                   >
                     {[1, 2, 3].map((amt) => {
-                      const location = gameState.board[currentPlayer.position]
+                      const location = getLocationSafe(
+                        gameState.board,
+                        currentPlayer!.position
+                      )
+                      if (!location) return null
                       const currentInf = getLocationInfluence(
                         location,
-                        currentPlayer.id
+                        currentPlayer!.id
                       )
                       const maxSpace = location.maxInfluence - currentInf
-                      const maxAffordable = currentPlayer.gold
+                      const maxAffordable = currentPlayer!.gold
                       const maxClaim = Math.min(maxAffordable, maxSpace)
 
                       if (amt > maxClaim) {
