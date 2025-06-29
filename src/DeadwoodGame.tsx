@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useState, useRef } from 'react'
+import React, { useReducer, useEffect, useRef } from 'react'
 import {
   GamePhase,
   ActionType,
@@ -32,10 +32,6 @@ const DeadwoodGame: React.FC = () => {
     message: '',
   }
   const [gameState, dispatch] = useReducer(gameReducer, initialState)
-  const [disabledActions, setDisabledActions] = useState<Set<ActionType>>(
-    new Set()
-  )
-  const disabledRef = useRef<Set<ActionType>>(new Set())
 
   const currentPlayer = getPlayerSafe(
     gameState.players,
@@ -116,7 +112,6 @@ const DeadwoodGame: React.FC = () => {
       currentPlayer?.isAI ||
       gameState.completedActions.length >= 2
     ) {
-      setDisabledActions(new Set())
     }
   }, [
     gameState.phase,
@@ -138,14 +133,7 @@ const DeadwoodGame: React.FC = () => {
       return
     }
 
-    if (disabledRef.current.has(action)) return
-    disabledRef.current.add(action)
-    setDisabledActions(new Set(disabledRef.current))
     dispatch({ type: 'SELECT_ACTION', payload: action })
-    setTimeout(() => {
-      disabledRef.current.delete(action)
-      setDisabledActions(new Set(disabledRef.current))
-    }, 100)
   }
 
   const handleLocationClick = (locationId: number) => {
@@ -702,9 +690,7 @@ const DeadwoodGame: React.FC = () => {
                   (a) => a.type === ActionType.MOVE
                 )}
                 isDisabled={
-                  !canSelectActions ||
-                  !isActionAvailable(ActionType.MOVE) ||
-                  disabledActions.has(ActionType.MOVE)
+                  !canSelectActions || !isActionAvailable(ActionType.MOVE)
                 }
                 onClick={() => handleActionSelect(ActionType.MOVE)}
                 cost={currentPlayer?.character.id === 'jane' ? 0 : undefined}
@@ -715,9 +701,7 @@ const DeadwoodGame: React.FC = () => {
                   (a) => a.type === ActionType.CLAIM
                 )}
                 isDisabled={
-                  !canSelectActions ||
-                  !isActionAvailable(ActionType.CLAIM) ||
-                  disabledActions.has(ActionType.CLAIM)
+                  !canSelectActions || !isActionAvailable(ActionType.CLAIM)
                 }
                 onClick={() => handleActionSelect(ActionType.CLAIM)}
                 cost={1}
@@ -728,9 +712,7 @@ const DeadwoodGame: React.FC = () => {
                   (a) => a.type === ActionType.CHALLENGE
                 )}
                 isDisabled={
-                  !canSelectActions ||
-                  !isActionAvailable(ActionType.CHALLENGE) ||
-                  disabledActions.has(ActionType.CHALLENGE)
+                  !canSelectActions || !isActionAvailable(ActionType.CHALLENGE)
                 }
                 onClick={() => handleActionSelect(ActionType.CHALLENGE)}
                 cost={getChallengeCost(currentPlayer)}
@@ -740,9 +722,7 @@ const DeadwoodGame: React.FC = () => {
                 isSelected={gameState.completedActions.some(
                   (a) => a.type === ActionType.REST
                 )}
-                isDisabled={
-                  !canSelectActions || disabledActions.has(ActionType.REST)
-                }
+                isDisabled={!canSelectActions}
                 onClick={() => handleActionSelect(ActionType.REST)}
               />
             </div>
