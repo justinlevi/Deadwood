@@ -79,3 +79,9 @@
 
 - Relocated files into `.claude` directory and removed subdirectory
 - What's next: verify tests pass
+
+### [2025-06-29 16:23 UTC] Update project title
+
+- Changed HTML title in index.html to "Deadwood Showdown"
+- Rebuilt dist output with new title
+- What's next: review deployment
