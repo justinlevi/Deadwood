@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { gameReducer } from '../../src/game'
-import type { GameState } from '../../src/game'
-import { GamePhase, ActionType } from '../../src/game'
-import { createInitialBoard } from '../../src/game'
+import gameReducer from '../../src/game/reducer'
+import type { GameState } from '../../src/game/types'
+import { GamePhase, ActionType } from '../../src/game/types'
+import { createInitialBoard } from '../../src/game/board'
 import { createPlayers, CHARACTERS } from '../../src/game/players'
 import { executeAction } from '../../src/game/reducer'
 
@@ -98,7 +98,7 @@ describe('challenge action targeting', () => {
       currentPlayer: 0,
       players: [makePlayer(0), makePlayer(1)],
       board: createInitialBoard(),
-      turnCount: 1,
+      roundCount: 1,
       gameConfig: { playerCount: 2, aiDifficulty: 'medium' as const },
       actionHistory: [],
       completedActions: [],
@@ -120,7 +120,7 @@ describe('challenge action targeting', () => {
       currentPlayer: 0,
       players: [makePlayer(0), makePlayer(1)],
       board: createInitialBoard(),
-      turnCount: 1,
+      roundCount: 1,
       gameConfig: { playerCount: 2, aiDifficulty: 'medium' as const },
       actionHistory: [],
       completedActions: [],

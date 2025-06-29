@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { gameReducer } from '../../src/game'
-import { createInitialBoard } from '../../src/game'
+import gameReducer from '../../src/game/reducer'
+import { createInitialBoard } from '../../src/game/board'
 import { createPlayers } from '../../src/game/players'
-import { GamePhase, ActionType, type GameState } from '../../src/game'
+import { GamePhase, ActionType, type GameState } from '../../src/game/types'
 
 const initialState: GameState = {
   phase: GamePhase.PLAYER_TURN,
