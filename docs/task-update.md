@@ -11,10 +11,11 @@
 - Updated cancel action to clear challenge target list
 - What's next: review remaining bug fixes
 
-### [2025-06-28 23:46 UTC] Claim amount validation fix
 
-- Implemented robust backend claim validation
-- Improved dropdown options and added UI feedback
-- Updated action availability logic
-- Added comprehensive unit and e2e tests
-- What's next: ensure all tests pass and finalize PR
+### [2025-06-28 23:47 UTC] Clarify rounds and update tests
+
+- Replaced remaining `turnCount` references with `roundCount`
+- Added round info display in UI and initial state defaults
+- Updated victory condition and created new round counting tests
+- What's next: ensure all tests pass and build succeeds
+

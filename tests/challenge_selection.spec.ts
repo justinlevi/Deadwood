@@ -7,7 +7,7 @@ async function startGame(page) {
   await page.goto('/')
   await page.locator('select').first().selectOption('3')
   await page.getByRole('button', { name: 'Start Game' }).click()
-  await expect(page.locator('text=Round 1')).toBeVisible()
+  await expect(page.locator('text=Round 1 •')).toBeVisible()
 }
 
 test('select challenge target when multiple players present', async ({ page }) => {

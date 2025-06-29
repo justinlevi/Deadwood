@@ -15,7 +15,7 @@ Feature: Deadwood Showdown UI/UX test plan
     And the AI difficulty selector defaults to "Medium"
     When the user clicks the "Start Game" button
     Then the game board should appear
-    And the turn message should contain "Turn 1"
+    And the turn message should contain "Round 1"
 
   Scenario: Moving to another location and claiming influence
     Given a deterministic starting state for easy assertions

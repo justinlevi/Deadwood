@@ -22,7 +22,8 @@ export const checkVictoryConditions = (
     if (maxInfluenceCount >= 3) return state.players.indexOf(player)
     if (player.totalInfluence >= 12) return state.players.indexOf(player)
   }
-  if (state.roundCount >= 20) {
+  // Game ends after 20 complete rounds
+  if (state.roundCount > 20) {
     let maxInfluence = -1
     let winner = 0
     state.players.forEach((player, index) => {
@@ -371,7 +372,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         currentPlayer: 0,
         players: [],
         board: createInitialBoard(),
-        roundCount: 0,
+        roundCount: 1,
         gameConfig: { playerCount: 2, aiDifficulty: 'medium' },
         actionHistory: [],
         completedActions: [],

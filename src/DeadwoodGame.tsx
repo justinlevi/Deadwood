@@ -23,7 +23,7 @@ const DeadwoodGame: React.FC = () => {
     currentPlayer: 0,
     players: [],
     board: createInitialBoard(),
-    roundCount: 0,
+    roundCount: 1,
     gameConfig: { playerCount: 2, aiDifficulty: 'medium' },
     actionHistory: [],
     completedActions: [],
@@ -281,6 +281,17 @@ const DeadwoodGame: React.FC = () => {
           }}
         >
           {gameState.message}
+        </div>
+        <div
+          style={{
+            fontSize: '0.9rem',
+            textAlign: 'center',
+            opacity: 0.8,
+            marginTop: '0.25rem',
+          }}
+        >
+          Round {gameState.roundCount} of 20 • Player{' '}
+          {gameState.currentPlayer + 1} of {gameState.players.length}
         </div>
       </div>
       <div

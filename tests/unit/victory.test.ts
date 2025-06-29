@@ -60,7 +60,7 @@ describe('victory conditions', () => {
       currentPlayer: 0,
       players: [makePlayer(0), makePlayer(1)],
       board: createInitialBoard(),
-      roundCount: 20,
+      roundCount: 21,
       gameConfig: { playerCount: 2, aiDifficulty: 'easy' },
       actionHistory: [],
       completedActions: [],
