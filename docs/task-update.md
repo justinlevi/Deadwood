@@ -31,3 +31,21 @@
 - Created comprehensive unit and e2e tests for invalid indices
 - Updated DeadwoodGame to show error UI on corrupted state
 - What's next: verify tests pass and finalize PR
+
+### [2025-06-29 02:03 UTC] Fix AI timer reset issue
+
+- Updated AI scheduling effect in DeadwoodGame to avoid clearing timers mid-turn
+- Added regression test to ensure AI completes its queued actions
+- What's next: verify tests pass and finalize PR
+
+### [2025-06-29 11:32 UTC] Adjust AI regression test
+
+- Updated ai_flow_complete test expectation to match end-of-turn state
+- What's next: ensure full test suite stability
+
+### [2025-06-29 12:42 UTC] Fix failing unit tests
+
+- Updated unit test imports to reference specific modules
+- Replaced deprecated `turnCount` with `roundCount`
+- Formatted changed tests with Prettier
+- What's next: run full test suite and ensure build passes

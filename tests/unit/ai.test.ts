@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import generateAIActions from '../../src/game/ai'
-import { createInitialBoard } from '../../src/game'
+import { createInitialBoard } from '../../src/game/board'
 import { createPlayers } from '../../src/game/players'
 import { GamePhase } from '../../src/game/types'
-import type { GameState } from '../../src/game'
+import type { GameState } from '../../src/game/types'
 
 const setupState = (): GameState => ({
   phase: GamePhase.PLAYER_TURN,
