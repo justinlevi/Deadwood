@@ -18,3 +18,7 @@
 - Updated action availability logic
 - Added comprehensive unit and e2e tests
 - What's next: ensure all tests pass and finalize PR
+### [2025-06-29 00:01 UTC] Restore reducer tests
+- Resolved merge conflict markers in reducer.test.ts
+- Re-ran lint, tests, and build successfully
+- What's next: monitor CI results
