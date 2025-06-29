@@ -61,11 +61,16 @@ const DeadwoodGame: React.FC = () => {
   }, [dispatch, gameState])
 
   const aiTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+  const aiFailsafeRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const clearAll = () => {
       aiTimersRef.current.forEach(clearTimeout)
       aiTimersRef.current = []
+      if (aiFailsafeRef.current) {
+        clearTimeout(aiFailsafeRef.current)
+        aiFailsafeRef.current = null
+      }
     }
 
     if (
@@ -102,6 +107,12 @@ const DeadwoodGame: React.FC = () => {
     }, 1500)
 
     aiTimersRef.current.push(main)
+    if (!aiFailsafeRef.current) {
+      aiFailsafeRef.current = setTimeout(
+        () => dispatch({ type: 'END_TURN' }),
+        10000
+      )
+    }
 
     return clearAll
   }, [gameState.phase, gameState.currentPlayer])
@@ -109,14 +120,28 @@ const DeadwoodGame: React.FC = () => {
   useEffect(() => {
     if (
       gameState.phase !== GamePhase.PLAYER_TURN ||
-      currentPlayer?.isAI ||
-      gameState.completedActions.length >= 2
+      !gameState.players[gameState.currentPlayer]?.isAI
     ) {
+      if (aiFailsafeRef.current) {
+        clearTimeout(aiFailsafeRef.current)
+        aiFailsafeRef.current = null
+      }
+      return
+    }
+
+    if (
+      gameState.completedActions.length >= 2 &&
+      !gameState.pendingAction &&
+      aiFailsafeRef.current
+    ) {
+      clearTimeout(aiFailsafeRef.current)
+      aiFailsafeRef.current = null
     }
   }, [
     gameState.phase,
     gameState.currentPlayer,
     gameState.completedActions.length,
+    gameState.pendingAction,
   ])
 
   const handleActionSelect = (action: ActionType) => {

@@ -79,3 +79,9 @@
 
 - Relocated files into `.claude` directory and removed subdirectory
 - What's next: verify tests pass
+
+### [2025-06-29 16:27 UTC] Add AI turn failsafe
+
+- Implemented automatic end-turn timer for AI players
+- Clear failsafe on turn completion or exit
+- What's next: monitor AI behavior under stress
