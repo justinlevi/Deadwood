@@ -42,3 +42,23 @@ test('influence stars persist after reaching three', async ({ page }) => {
   expect(starText).toBe('★★★')
 })
 
+test('influence stars remain after player moves away', async ({ page }) => {
+  await startGame(page)
+
+  await page.getByRole('button', { name: /Claim/ }).click()
+  await page.locator('select').selectOption('1')
+  await page.getByRole('button', { name: /Confirm claim/i }).click()
+
+  // Move to a different location and end turn
+  await page.getByRole('button', { name: /Move/ }).click()
+  await page.getByRole('heading', { name: 'Hardware Store' }).click()
+  await page.getByRole('button', { name: /Confirm move/i }).click()
+  await page.getByRole('button', { name: /Rest/ }).click()
+  await expect(page.locator('text=AI Player')).toBeVisible()
+  await page.waitForTimeout(1000)
+
+  const gemSaloon = getLocationCard(page, 'Gem Saloon')
+  const star = gemSaloon.locator('text=★')
+  await expect(star).toBeVisible()
+})
+
