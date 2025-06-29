@@ -50,6 +50,35 @@ it('handles challenge target by index', () => {
   expect(finalState.board[0].influences['player-1']).toBe(1)
 })
 
+describe('action phase validation', () => {
+  it('prevents actions when not in PLAYER_TURN phase', () => {
+    const state: GameState = {
+      ...initialState,
+      phase: GamePhase.GAME_OVER,
+      winner: 0,
+    } as GameState
+
+    const newState = gameReducer(state, {
+      type: 'SELECT_ACTION',
+      payload: ActionType.MOVE,
+    })
+
+    expect(newState).toEqual(state)
+  })
+
+  it('prevents actions during setup phase', () => {
+    const state: GameState = {
+      ...initialState,
+      phase: GamePhase.SETUP,
+    }
+
+    const newState = gameReducer(state, {
+      type: 'SELECT_ACTION',
+      payload: ActionType.CLAIM,
+    })
+
+    expect(newState).toEqual(state)
+=======
 const makePlayer = (index: number, position = 0) => ({
   id: `player-${index}`,
   name: `Player ${index}`,
