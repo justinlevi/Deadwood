@@ -85,3 +85,10 @@
 - Implemented automatic end-turn timer for AI players
 - Clear failsafe on turn completion or exit
 - What's next: monitor AI behavior under stress
+
+### [2025-06-29 17:13 UTC] Add action log UI
+
+- Introduced optional `actionLog` to `GameState` for storing descriptions
+- Logged each executed action with simple reasoning in `executeAction`
+- Displayed a scrollable log at the bottom of the action panel
+- What's next: confirm UI updates pass tests

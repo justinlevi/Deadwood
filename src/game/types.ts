@@ -42,6 +42,8 @@ export interface GameState {
   roundCount: number
   gameConfig: GameConfig
   actionHistory: Action[]
+  /** Running log of executed actions */
+  actionLog?: string[]
   winner?: number
   completedActions: PendingAction[]
   pendingAction?: PendingAction
