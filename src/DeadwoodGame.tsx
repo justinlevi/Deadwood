@@ -32,7 +32,6 @@ const DeadwoodGame: React.FC = () => {
     message: '',
   }
   const [gameState, dispatch] = useReducer(gameReducer, initialState)
-  const [isProcessingAction, setIsProcessingAction] = useState(false)
   const [disabledActions, setDisabledActions] = useState<Set<ActionType>>(
     new Set()
   )
@@ -65,72 +64,50 @@ const DeadwoodGame: React.FC = () => {
   }, [dispatch, gameState])
 
   const aiTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
-  const actionQueueRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    const clearAllTimers = () => {
-      aiTimersRef.current.forEach((timer) => clearTimeout(timer))
+    const clearAll = () => {
+      aiTimersRef.current.forEach(clearTimeout)
       aiTimersRef.current = []
     }
 
-    clearAllTimers()
-
     if (
-      gameState.phase === GamePhase.PLAYER_TURN &&
-      currentPlayer?.isAI &&
-      !gameState.pendingAction &&
-      gameState.completedActions.length === 0
+      gameState.phase !== GamePhase.PLAYER_TURN ||
+      !gameState.players[gameState.currentPlayer]?.isAI
     ) {
-      const mainTimer = setTimeout(() => {
-        if (gameState.phase !== GamePhase.PLAYER_TURN) return
-
-        const aiActions = generateAIActions(gameState)
-
-        aiActions.forEach((action, index) => {
-          const actionTimer = setTimeout(() => {
-            if (gameState.phase !== GamePhase.PLAYER_TURN) return
-
-            dispatch({ type: 'SELECT_ACTION', payload: action.type })
-
-            if (action.target !== undefined || action.amount !== undefined) {
-              const targetTimer = setTimeout(() => {
-                if (gameState.phase !== GamePhase.PLAYER_TURN) return
-
-                dispatch({
-                  type: 'SET_ACTION_TARGET',
-                  payload: { target: action.target, amount: action.amount },
-                })
-
-                const confirmTimer = setTimeout(() => {
-                  if (gameState.phase !== GamePhase.PLAYER_TURN) return
-                  dispatch({ type: 'CONFIRM_ACTION' })
-                }, 500)
-
-                aiTimersRef.current.push(confirmTimer)
-              }, 500)
-
-              aiTimersRef.current.push(targetTimer)
-            } else if (action.type !== ActionType.REST) {
-              const confirmTimer = setTimeout(() => {
-                if (gameState.phase !== GamePhase.PLAYER_TURN) return
-                dispatch({ type: 'CONFIRM_ACTION' })
-              }, 500)
-
-              aiTimersRef.current.push(confirmTimer)
-            }
-          }, index * 2000)
-
-          aiTimersRef.current.push(actionTimer)
-        })
-      }, 1500)
-
-      aiTimersRef.current.push(mainTimer)
+      clearAll()
+      return
     }
 
-    return () => {
-      clearAllTimers()
-    }
-  }, [gameState, dispatch])
+    if (aiTimersRef.current.length) return
+
+    const main = setTimeout(() => {
+      const aiActions = generateAIActions(gameState)
+      aiActions.forEach((a, i) => {
+        const t1 = setTimeout(
+          () => dispatch({ type: 'SELECT_ACTION', payload: a.type }),
+          i * 2000
+        )
+        const t2 = setTimeout(
+          () =>
+            dispatch({
+              type: 'SET_ACTION_TARGET',
+              payload: { target: a.target, amount: a.amount },
+            }),
+          i * 2000 + 500
+        )
+        const t3 = setTimeout(
+          () => dispatch({ type: 'CONFIRM_ACTION' }),
+          i * 2000 + 1000
+        )
+        aiTimersRef.current.push(t1, t2, t3)
+      })
+    }, 1500)
+
+    aiTimersRef.current.push(main)
+
+    return clearAll
+  }, [gameState.phase, gameState.currentPlayer])
 
   useEffect(() => {
     if (
@@ -138,7 +115,6 @@ const DeadwoodGame: React.FC = () => {
       currentPlayer?.isAI ||
       gameState.completedActions.length >= 2
     ) {
-      setIsProcessingAction(false)
       setDisabledActions(new Set())
     }
   }, [
@@ -148,10 +124,6 @@ const DeadwoodGame: React.FC = () => {
   ])
 
   const handleActionSelect = (action: ActionType) => {
-    if (isProcessingAction) {
-      console.warn('Cannot select action: another action is being processed')
-      return
-    }
     if (gameState.completedActions.length >= 2) {
       console.warn('Cannot select action: already completed 2 actions')
       return
@@ -165,23 +137,11 @@ const DeadwoodGame: React.FC = () => {
       return
     }
 
-    setIsProcessingAction(true)
     setDisabledActions((prev) => new Set(prev).add(action))
     dispatch({ type: 'SELECT_ACTION', payload: action })
     setTimeout(() => {
-      setIsProcessingAction(false)
       setDisabledActions(new Set())
     }, 100)
-  }
-
-  const handleActionSelectDebounced = (action: ActionType) => {
-    if (actionQueueRef.current) {
-      clearTimeout(actionQueueRef.current)
-    }
-    actionQueueRef.current = setTimeout(() => {
-      handleActionSelect(action)
-      actionQueueRef.current = null
-    }, 50)
   }
 
   const handleLocationClick = (locationId: number) => {
@@ -718,91 +678,83 @@ const DeadwoodGame: React.FC = () => {
               </div>
             </div>
           )}
-          {!gameState.pendingAction && (
-            <>
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '0.5rem',
-                  marginBottom: '0.5rem',
-                  opacity: isProcessingAction ? 0.6 : 1,
-                  pointerEvents: isProcessingAction ? 'none' : 'auto',
-                }}
-              >
-                <ActionButton
-                  action={ActionType.MOVE}
-                  isSelected={gameState.completedActions.some(
-                    (a) => a.type === ActionType.MOVE
-                  )}
-                  isDisabled={
-                    !isActionAvailable(ActionType.MOVE) ||
-                    gameState.completedActions.length >= 2 ||
-                    isProcessingAction ||
-                    !!gameState.pendingAction ||
-                    disabledActions.has(ActionType.MOVE)
-                  }
-                  onClick={() => handleActionSelectDebounced(ActionType.MOVE)}
-                  cost={currentPlayer?.character.id === 'jane' ? 0 : undefined}
-                />
-                <ActionButton
-                  action={ActionType.CLAIM}
-                  isSelected={gameState.completedActions.some(
-                    (a) => a.type === ActionType.CLAIM
-                  )}
-                  isDisabled={
-                    !isActionAvailable(ActionType.CLAIM) ||
-                    gameState.completedActions.length >= 2 ||
-                    isProcessingAction ||
-                    !!gameState.pendingAction ||
-                    disabledActions.has(ActionType.CLAIM)
-                  }
-                  onClick={() => handleActionSelectDebounced(ActionType.CLAIM)}
-                  cost={1}
-                />
-                <ActionButton
-                  action={ActionType.CHALLENGE}
-                  isSelected={gameState.completedActions.some(
-                    (a) => a.type === ActionType.CHALLENGE
-                  )}
-                  isDisabled={
-                    !isActionAvailable(ActionType.CHALLENGE) ||
-                    gameState.completedActions.length >= 2 ||
-                    isProcessingAction ||
-                    !!gameState.pendingAction ||
-                    disabledActions.has(ActionType.CHALLENGE)
-                  }
-                  onClick={() =>
-                    handleActionSelectDebounced(ActionType.CHALLENGE)
-                  }
-                  cost={getChallengeCost(currentPlayer)}
-                />
-                <ActionButton
-                  action={ActionType.REST}
-                  isSelected={gameState.completedActions.some(
-                    (a) => a.type === ActionType.REST
-                  )}
-                  isDisabled={
-                    gameState.completedActions.length >= 2 ||
-                    isProcessingAction ||
-                    !!gameState.pendingAction ||
-                    disabledActions.has(ActionType.REST)
-                  }
-                  onClick={() => handleActionSelectDebounced(ActionType.REST)}
-                />
-              </div>
-              <div
-                style={{
-                  fontSize: '0.8rem',
-                  textAlign: 'center',
-                  color: '#8B4513',
-                }}
-              >
-                {isProcessingAction
-                  ? 'Processing...'
-                  : `Selected: ${gameState.completedActions.length}/2 actions`}
-              </div>
-            </>
-          )}
+          <>
+            <div
+              style={{
+                display: 'flex',
+                gap: '0.5rem',
+                marginBottom: '0.5rem',
+              }}
+            >
+              <ActionButton
+                action={ActionType.MOVE}
+                isSelected={gameState.completedActions.some(
+                  (a) => a.type === ActionType.MOVE
+                )}
+                isDisabled={
+                  !isActionAvailable(ActionType.MOVE) ||
+                  gameState.completedActions.length >= 2 ||
+                  !!gameState.pendingAction ||
+                  !isHumanTurn ||
+                  disabledActions.has(ActionType.MOVE)
+                }
+                onClick={() => handleActionSelect(ActionType.MOVE)}
+                cost={currentPlayer?.character.id === 'jane' ? 0 : undefined}
+              />
+              <ActionButton
+                action={ActionType.CLAIM}
+                isSelected={gameState.completedActions.some(
+                  (a) => a.type === ActionType.CLAIM
+                )}
+                isDisabled={
+                  !isActionAvailable(ActionType.CLAIM) ||
+                  gameState.completedActions.length >= 2 ||
+                  !!gameState.pendingAction ||
+                  !isHumanTurn ||
+                  disabledActions.has(ActionType.CLAIM)
+                }
+                onClick={() => handleActionSelect(ActionType.CLAIM)}
+                cost={1}
+              />
+              <ActionButton
+                action={ActionType.CHALLENGE}
+                isSelected={gameState.completedActions.some(
+                  (a) => a.type === ActionType.CHALLENGE
+                )}
+                isDisabled={
+                  !isActionAvailable(ActionType.CHALLENGE) ||
+                  gameState.completedActions.length >= 2 ||
+                  !!gameState.pendingAction ||
+                  !isHumanTurn ||
+                  disabledActions.has(ActionType.CHALLENGE)
+                }
+                onClick={() => handleActionSelect(ActionType.CHALLENGE)}
+                cost={getChallengeCost(currentPlayer)}
+              />
+              <ActionButton
+                action={ActionType.REST}
+                isSelected={gameState.completedActions.some(
+                  (a) => a.type === ActionType.REST
+                )}
+                isDisabled={
+                  gameState.completedActions.length >= 2 ||
+                  !!gameState.pendingAction ||
+                  !isHumanTurn ||
+                  disabledActions.has(ActionType.REST)
+                }
+                onClick={() => handleActionSelect(ActionType.REST)}
+              />
+            </div>
+            <div
+              style={{
+                fontSize: '0.8rem',
+                textAlign: 'center',
+                color: '#8B4513',
+              }}
+            >
+              {`Selected: ${gameState.completedActions.length}/2 actions`}
+            </div>
+          </>
         </div>
       )}
     </div>

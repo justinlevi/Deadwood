@@ -29,7 +29,7 @@ describe('challenge cost validation', () => {
         makePlayer(1, 0, 3), // Target at same location, no influence
       ],
       board,
-      turnCount: 1,
+      roundCount: 1,
       gameConfig: { playerCount: 2, aiDifficulty: 'medium' as const },
       actionHistory: [],
       completedActions: [],
@@ -60,7 +60,7 @@ describe('challenge cost validation', () => {
         makePlayer(0, 1, 3), // Al at location 1 with influence
       ],
       board,
-      turnCount: 1,
+      roundCount: 1,
       gameConfig: { playerCount: 2, aiDifficulty: 'medium' as const },
       actionHistory: [],
       completedActions: [],
@@ -90,7 +90,7 @@ describe('challenge cost validation', () => {
         makePlayer(0, 0, 3), // Al at same location with influence
       ],
       board,
-      turnCount: 1,
+      roundCount: 1,
       gameConfig: { playerCount: 2, aiDifficulty: 'medium' as const },
       actionHistory: [],
       completedActions: [],
@@ -116,7 +116,7 @@ describe('challenge cost validation', () => {
       currentPlayer: 0,
       players: [makePlayer(0, 0, 3), makePlayer(1, 1, 3)],
       board: createInitialBoard(),
-      turnCount: 1,
+      roundCount: 1,
       gameConfig: { playerCount: 2, aiDifficulty: 'medium' as const },
       actionHistory: [],
       completedActions: [],
