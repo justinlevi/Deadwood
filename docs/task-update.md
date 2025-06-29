@@ -57,10 +57,8 @@
 - Updated DeadwoodGame to reflect these changes
 - What's next: resolve remaining Playwright test failures
 
-### [2025-06-29 13:34 UTC] Fix action disabling and victory timing
+### [2025-06-29 13:44 UTC] Add complete gameplay test suite
 
-- Updated DeadwoodGame to restrict selecting actions when actions complete
-- Improved confirm button validation for claim action
-- Added canSelectActions logic and victory checks at round transitions
-- Updated reducer victory logic to start-of-round check
-- What's next: ensure Playwright and unit tests pass
+- Added comprehensive Playwright tests covering all mechanics
+- Created helper functions and multiple scenarios
+- What's next: monitor CI performance and optimize if needed
