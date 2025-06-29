@@ -11,11 +11,10 @@
 - Updated cancel action to clear challenge target list
 - What's next: review remaining bug fixes
 
+### [2025-06-28 23:48 UTC] Fix action selection race condition
 
-### [2025-06-28 23:47 UTC] Clarify rounds and update tests
-
-- Replaced remaining `turnCount` references with `roundCount`
-- Added round info display in UI and initial state defaults
-- Updated victory condition and created new round counting tests
-- What's next: ensure all tests pass and build succeeds
+- Added processing and disabledActions state to prevent invalid action selections
+- Updated UI with debouncing and visual feedback
+- Created Playwright and unit tests for validation
+- What's next: ensure other bug fixes behave correctly
 
