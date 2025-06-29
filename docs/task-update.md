@@ -13,6 +13,12 @@
 
 ### [2025-06-28 23:45 UTC] Fix challenge validation bug
 
-- Reordered validations in challenge action and added pre-checks in reducer
-- Updated unit and e2e tests for challenge validation
-- What's next: verify all tests pass and ensure no lint issues
+- Implemented robust backend claim validation
+- Improved dropdown options and added UI feedback
+- Updated action availability logic
+- Added comprehensive unit and e2e tests
+- What's next: ensure all tests pass and finalize PR
+### [2025-06-29 00:01 UTC] Restore reducer tests
+- Resolved merge conflict markers in reducer.test.ts
+- Re-ran lint, tests, and build successfully
+- What's next: monitor CI results
