@@ -47,7 +47,6 @@ const DeadwoodGame: React.FC = () => {
   const aiTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
   const actionQueueRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-
   useEffect(() => {
     const clearAllTimers = () => {
       aiTimersRef.current.forEach((timer) => clearTimeout(timer))
