@@ -35,6 +35,7 @@ const DeadwoodGame: React.FC = () => {
   const [disabledActions, setDisabledActions] = useState<Set<ActionType>>(
     new Set()
   )
+  const disabledRef = useRef<Set<ActionType>>(new Set())
 
   const currentPlayer = getPlayerSafe(
     gameState.players,
@@ -137,10 +138,13 @@ const DeadwoodGame: React.FC = () => {
       return
     }
 
-    setDisabledActions((prev) => new Set(prev).add(action))
+    if (disabledRef.current.has(action)) return
+    disabledRef.current.add(action)
+    setDisabledActions(new Set(disabledRef.current))
     dispatch({ type: 'SELECT_ACTION', payload: action })
     setTimeout(() => {
-      setDisabledActions(new Set())
+      disabledRef.current.delete(action)
+      setDisabledActions(new Set(disabledRef.current))
     }, 100)
   }
 

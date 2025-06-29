@@ -95,7 +95,7 @@ test('round counter visible in all game states', async ({ page }) => {
       await page.getByRole('button', { name: /Rest/ }).click()
       await page.getByRole('button', { name: /Rest/ }).click()
     } else {
-      await page.waitForTimeout(3000)
+      await page.waitForTimeout(5000)
     }
   }
 

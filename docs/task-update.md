@@ -62,3 +62,10 @@
 - Added comprehensive Playwright tests covering all mechanics
 - Created helper functions and multiple scenarios
 - What's next: monitor CI performance and optimize if needed
+
+### [2025-06-29 14:35 UTC] Fix race condition and update tests
+
+- Added boolean attribute strings in LocationCard for reliable test queries
+- Introduced synchronous disabled action tracking to prevent multi-click issues
+- Adjusted startGame helper and round display waits in e2e tests
+- What's next: verify all tests pass

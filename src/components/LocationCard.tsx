@@ -31,8 +31,8 @@ const LocationCard: React.FC<Props> = ({
     <div
       onClick={isValidTarget ? onClick : undefined}
       className={styles.card}
-      data-current={isCurrentLocation}
-      data-valid={isValidTarget}
+      data-current={isCurrentLocation ? 'true' : 'false'}
+      data-valid={isValidTarget ? 'true' : 'false'}
     >
       <h3 className={styles.title}>{location.name}</h3>
       {isValidTarget && showMoveCost !== undefined && showMoveCost > 0 && (
