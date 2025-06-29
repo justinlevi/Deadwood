@@ -4,7 +4,10 @@ import styles from './LocationCard.module.css'
 
 interface Props {
   location: DWLocation
+  /** Players currently at this location */
   players: Player[]
+  /** All players in the game (for looking up influence colors) */
+  allPlayers: Player[]
   onClick: () => void
   isValidTarget: boolean
   currentPlayerId: string
@@ -16,6 +19,7 @@ interface Props {
 const LocationCard: React.FC<Props> = ({
   location,
   players,
+  allPlayers,
   onClick,
   isValidTarget,
   currentPlayerId,
@@ -41,7 +45,7 @@ const LocationCard: React.FC<Props> = ({
       {influences.length > 0 && (
         <div className={styles.influences}>
           {influences.map(([playerId, influence]) => {
-            const player = players.find((p) => p.id === playerId)
+            const player = allPlayers.find((p) => p.id === playerId)
             if (!player) return null
             return (
               <div

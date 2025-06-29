@@ -359,7 +359,9 @@ const DeadwoodGame: React.FC = () => {
             padding: '1rem',
             marginBottom: '1rem',
             boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+            border: `3px solid ${currentPlayer?.color}`,
           }}
+          data-testid="current-player"
         >
           <div
             style={{
@@ -375,8 +377,17 @@ const DeadwoodGame: React.FC = () => {
                   fontWeight: 'bold',
                   fontSize: '1.1rem',
                   color: '#654321',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
                 }}
               >
+                <span
+                  data-testid="current-player-star"
+                  style={{ color: currentPlayer?.color }}
+                >
+                  ★
+                </span>
                 {currentPlayer?.name} - {currentPlayer?.character.name}
               </div>
               <div
@@ -449,6 +460,7 @@ const DeadwoodGame: React.FC = () => {
                 key={location.id}
                 location={location}
                 players={playersAtLocation}
+                allPlayers={gameState.players}
                 onClick={() => handleLocationClick(location.id)}
                 isValidTarget={isValidTarget}
                 currentPlayerId={currentPlayer?.id || ''}
@@ -490,9 +502,25 @@ const DeadwoodGame: React.FC = () => {
                   padding: '0.5rem',
                   background: 'rgba(255, 255, 255, 0.5)',
                   borderRadius: '4px',
+                  border: `2px solid ${player.color}`,
                 }}
+                data-testid={`other-player-${player.id}`}
               >
-                <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>
+                <div
+                  style={{
+                    fontWeight: 'bold',
+                    marginBottom: '0.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                  }}
+                >
+                  <span
+                    data-testid="player-star"
+                    style={{ color: player.color }}
+                  >
+                    ★
+                  </span>
                   {player.name} - {player.character.name}
                 </div>
                 <div

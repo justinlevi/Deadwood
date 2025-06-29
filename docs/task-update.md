@@ -97,3 +97,19 @@
 
 - Created Playwright spec to ensure claim stars remain visible after reaching three influence
 - What's next: verify tests and build succeed
+
+### [2025-06-29 18:14 UTC] Add player color indicators
+
+- Added colored stars and border styling for current and other players
+- Introduced data-testid attributes for reliable selectors
+- Created Playwright test verifying star visibility
+- What's next: ensure lint, test and build pass
+
+### [2025-06-29 18:26 UTC] Fix influence star persistence
+
+- Updated `LocationCard` to reference all players when rendering influences so
+  stars remain visible after players move away
+- Passed `allPlayers` from `DeadwoodGame`
+- Added Playwright test covering influence persistence when moving to another
+  location
+- What's next: run full test suite and ensure build succeeds
