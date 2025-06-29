@@ -283,6 +283,10 @@ const DeadwoodGame: React.FC = () => {
 
   const isHumanTurn = currentPlayer && !currentPlayer.isAI
   const validChallengeTargets = getValidChallengeTargets()
+  const canSelectActions =
+    isHumanTurn &&
+    gameState.completedActions.length < 2 &&
+    !gameState.pendingAction
 
   return (
     <div
@@ -652,7 +656,9 @@ const DeadwoodGame: React.FC = () => {
                     (gameState.pendingAction.type === ActionType.MOVE &&
                       gameState.pendingAction.target === undefined) ||
                     (gameState.pendingAction.type === ActionType.CHALLENGE &&
-                      gameState.pendingAction.target === undefined)
+                      gameState.pendingAction.target === undefined) ||
+                    (gameState.pendingAction.type === ActionType.CLAIM &&
+                      !getClaimValidation()?.valid)
                   }
                   style={{
                     flex: 2,
@@ -692,10 +698,8 @@ const DeadwoodGame: React.FC = () => {
                   (a) => a.type === ActionType.MOVE
                 )}
                 isDisabled={
+                  !canSelectActions ||
                   !isActionAvailable(ActionType.MOVE) ||
-                  gameState.completedActions.length >= 2 ||
-                  !!gameState.pendingAction ||
-                  !isHumanTurn ||
                   disabledActions.has(ActionType.MOVE)
                 }
                 onClick={() => handleActionSelect(ActionType.MOVE)}
@@ -707,10 +711,8 @@ const DeadwoodGame: React.FC = () => {
                   (a) => a.type === ActionType.CLAIM
                 )}
                 isDisabled={
+                  !canSelectActions ||
                   !isActionAvailable(ActionType.CLAIM) ||
-                  gameState.completedActions.length >= 2 ||
-                  !!gameState.pendingAction ||
-                  !isHumanTurn ||
                   disabledActions.has(ActionType.CLAIM)
                 }
                 onClick={() => handleActionSelect(ActionType.CLAIM)}
@@ -722,10 +724,8 @@ const DeadwoodGame: React.FC = () => {
                   (a) => a.type === ActionType.CHALLENGE
                 )}
                 isDisabled={
+                  !canSelectActions ||
                   !isActionAvailable(ActionType.CHALLENGE) ||
-                  gameState.completedActions.length >= 2 ||
-                  !!gameState.pendingAction ||
-                  !isHumanTurn ||
                   disabledActions.has(ActionType.CHALLENGE)
                 }
                 onClick={() => handleActionSelect(ActionType.CHALLENGE)}
@@ -737,10 +737,7 @@ const DeadwoodGame: React.FC = () => {
                   (a) => a.type === ActionType.REST
                 )}
                 isDisabled={
-                  gameState.completedActions.length >= 2 ||
-                  !!gameState.pendingAction ||
-                  !isHumanTurn ||
-                  disabledActions.has(ActionType.REST)
+                  !canSelectActions || disabledActions.has(ActionType.REST)
                 }
                 onClick={() => handleActionSelect(ActionType.REST)}
               />
