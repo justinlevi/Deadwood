@@ -32,6 +32,9 @@ const DeadwoodGame: React.FC = () => {
   }
   const [gameState, dispatch] = useReducer(gameReducer, initialState)
   const [isProcessingAction, setIsProcessingAction] = useState(false)
+  const [disabledActions, setDisabledActions] = useState<Set<ActionType>>(
+    new Set()
+  )
 
   // expose helpers for Playwright tests
   useEffect(() => {
@@ -42,6 +45,7 @@ const DeadwoodGame: React.FC = () => {
   }, [dispatch, gameState])
 
   const aiTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+  const actionQueueRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     aiTimersRef.current.forEach((t) => clearTimeout(t))
@@ -92,8 +96,26 @@ const DeadwoodGame: React.FC = () => {
     }
   }, [gameState])
 
+  useEffect(() => {
+    if (
+      gameState.phase !== GamePhase.PLAYER_TURN ||
+      gameState.players[gameState.currentPlayer]?.isAI ||
+      gameState.completedActions.length >= 2
+    ) {
+      setIsProcessingAction(false)
+      setDisabledActions(new Set())
+    }
+  }, [
+    gameState.phase,
+    gameState.currentPlayer,
+    gameState.completedActions.length,
+  ])
+
   const handleActionSelect = (action: ActionType) => {
-    if (isProcessingAction) return
+    if (isProcessingAction) {
+      console.warn('Cannot select action: another action is being processed')
+      return
+    }
     if (gameState.completedActions.length >= 2) {
       console.warn('Cannot select action: already completed 2 actions')
       return
@@ -102,9 +124,28 @@ const DeadwoodGame: React.FC = () => {
       console.warn('Cannot select action: pending action in progress')
       return
     }
+    if (!isActionAvailable(action)) {
+      console.warn(`Cannot select action: ${action} not available`)
+      return
+    }
+
     setIsProcessingAction(true)
+    setDisabledActions((prev) => new Set(prev).add(action))
     dispatch({ type: 'SELECT_ACTION', payload: action })
-    setTimeout(() => setIsProcessingAction(false), 100)
+    setTimeout(() => {
+      setIsProcessingAction(false)
+      setDisabledActions(new Set())
+    }, 100)
+  }
+
+  const handleActionSelectDebounced = (action: ActionType) => {
+    if (actionQueueRef.current) {
+      clearTimeout(actionQueueRef.current)
+    }
+    actionQueueRef.current = setTimeout(() => {
+      handleActionSelect(action)
+      actionQueueRef.current = null
+    }, 50)
   }
 
   const handleLocationClick = (locationId: number) => {
@@ -572,6 +613,8 @@ const DeadwoodGame: React.FC = () => {
                   display: 'flex',
                   gap: '0.5rem',
                   marginBottom: '0.5rem',
+                  opacity: isProcessingAction ? 0.6 : 1,
+                  pointerEvents: isProcessingAction ? 'none' : 'auto',
                 }}
               >
                 <ActionButton
@@ -583,9 +626,10 @@ const DeadwoodGame: React.FC = () => {
                     !isActionAvailable(ActionType.MOVE) ||
                     gameState.completedActions.length >= 2 ||
                     isProcessingAction ||
-                    !!gameState.pendingAction
+                    !!gameState.pendingAction ||
+                    disabledActions.has(ActionType.MOVE)
                   }
-                  onClick={() => handleActionSelect(ActionType.MOVE)}
+                  onClick={() => handleActionSelectDebounced(ActionType.MOVE)}
                   cost={currentPlayer?.character.id === 'jane' ? 0 : undefined}
                 />
                 <ActionButton
@@ -597,9 +641,10 @@ const DeadwoodGame: React.FC = () => {
                     !isActionAvailable(ActionType.CLAIM) ||
                     gameState.completedActions.length >= 2 ||
                     isProcessingAction ||
-                    !!gameState.pendingAction
+                    !!gameState.pendingAction ||
+                    disabledActions.has(ActionType.CLAIM)
                   }
-                  onClick={() => handleActionSelect(ActionType.CLAIM)}
+                  onClick={() => handleActionSelectDebounced(ActionType.CLAIM)}
                   cost={1}
                 />
                 <ActionButton
@@ -611,9 +656,12 @@ const DeadwoodGame: React.FC = () => {
                     !isActionAvailable(ActionType.CHALLENGE) ||
                     gameState.completedActions.length >= 2 ||
                     isProcessingAction ||
-                    !!gameState.pendingAction
+                    !!gameState.pendingAction ||
+                    disabledActions.has(ActionType.CHALLENGE)
                   }
-                  onClick={() => handleActionSelect(ActionType.CHALLENGE)}
+                  onClick={() =>
+                    handleActionSelectDebounced(ActionType.CHALLENGE)
+                  }
                   cost={getChallengeCost(currentPlayer)}
                 />
                 <ActionButton
@@ -624,9 +672,10 @@ const DeadwoodGame: React.FC = () => {
                   isDisabled={
                     gameState.completedActions.length >= 2 ||
                     isProcessingAction ||
-                    !!gameState.pendingAction
+                    !!gameState.pendingAction ||
+                    disabledActions.has(ActionType.REST)
                   }
-                  onClick={() => handleActionSelect(ActionType.REST)}
+                  onClick={() => handleActionSelectDebounced(ActionType.REST)}
                 />
               </div>
               <div
@@ -636,7 +685,9 @@ const DeadwoodGame: React.FC = () => {
                   color: '#8B4513',
                 }}
               >
-                Selected: {gameState.completedActions.length}/2 actions
+                {isProcessingAction
+                  ? 'Processing...'
+                  : `Selected: ${gameState.completedActions.length}/2 actions`}
               </div>
             </>
           )}

@@ -11,3 +11,9 @@
 - Updated cancel action to clear challenge target list
 - What's next: review remaining bug fixes
 
+### [2025-06-28 23:48 UTC] Fix action selection race condition
+
+- Added processing and disabledActions state to prevent invalid action selections
+- Updated UI with debouncing and visual feedback
+- Created Playwright and unit tests for validation
+- What's next: ensure other bug fixes behave correctly
