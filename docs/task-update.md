@@ -11,3 +11,8 @@
 - Updated cancel action to clear challenge target list
 - What's next: review remaining bug fixes
 
+### [2025-06-28 23:45 UTC] Fix challenge validation bug
+
+- Reordered validations in challenge action and added pre-checks in reducer
+- Updated unit and e2e tests for challenge validation
+- What's next: verify all tests pass and ensure no lint issues
