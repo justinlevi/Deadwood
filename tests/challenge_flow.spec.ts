@@ -51,7 +51,7 @@ test('challenge action targets correct player', async ({ page }) => {
             influences: i === 0 ? { 'player-1': 3 } : {},
             maxInfluence: 3,
           })),
-        turnCount: 1,
+        roundCount: 1,
         completedActions: [],
         pendingAction: undefined,
         message: 'Your turn',

@@ -23,7 +23,7 @@ const DeadwoodGame: React.FC = () => {
     currentPlayer: 0,
     players: [],
     board: createInitialBoard(),
-    roundCount: 0,
+    roundCount: 1,
     gameConfig: { playerCount: 2, aiDifficulty: 'medium' },
     actionHistory: [],
     completedActions: [],
@@ -47,9 +47,14 @@ const DeadwoodGame: React.FC = () => {
   const aiTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
   const actionQueueRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+
   useEffect(() => {
-    aiTimersRef.current.forEach((t) => clearTimeout(t))
-    aiTimersRef.current = []
+    const clearAllTimers = () => {
+      aiTimersRef.current.forEach((timer) => clearTimeout(timer))
+      aiTimersRef.current = []
+    }
+
+    clearAllTimers()
 
     if (
       gameState.phase === GamePhase.PLAYER_TURN &&
@@ -57,9 +62,12 @@ const DeadwoodGame: React.FC = () => {
       !gameState.pendingAction &&
       gameState.completedActions.length === 0
     ) {
-      const timer1 = setTimeout(() => {
+      const mainTimer = setTimeout(() => {
+        if (gameState.phase !== GamePhase.PLAYER_TURN) return
+
         const aiActions = generateAIActions(gameState)
-        aiActions.forEach((action, idx) => {
+
+        aiActions.forEach((action, index) => {
           const actionTimer = setTimeout(() => {
             if (gameState.phase !== GamePhase.PLAYER_TURN) return
 
@@ -67,34 +75,43 @@ const DeadwoodGame: React.FC = () => {
 
             if (action.target !== undefined || action.amount !== undefined) {
               const targetTimer = setTimeout(() => {
+                if (gameState.phase !== GamePhase.PLAYER_TURN) return
+
                 dispatch({
                   type: 'SET_ACTION_TARGET',
                   payload: { target: action.target, amount: action.amount },
                 })
+
                 const confirmTimer = setTimeout(() => {
+                  if (gameState.phase !== GamePhase.PLAYER_TURN) return
                   dispatch({ type: 'CONFIRM_ACTION' })
                 }, 500)
+
                 aiTimersRef.current.push(confirmTimer)
               }, 500)
+
               aiTimersRef.current.push(targetTimer)
             } else if (action.type !== ActionType.REST) {
               const confirmTimer = setTimeout(() => {
+                if (gameState.phase !== GamePhase.PLAYER_TURN) return
                 dispatch({ type: 'CONFIRM_ACTION' })
               }, 500)
+
               aiTimersRef.current.push(confirmTimer)
             }
-          }, idx * 2000)
+          }, index * 2000)
+
           aiTimersRef.current.push(actionTimer)
         })
       }, 1500)
-      aiTimersRef.current.push(timer1)
+
+      aiTimersRef.current.push(mainTimer)
     }
 
     return () => {
-      aiTimersRef.current.forEach((t) => clearTimeout(t))
-      aiTimersRef.current = []
+      clearAllTimers()
     }
-  }, [gameState])
+  }, [gameState, dispatch])
 
   useEffect(() => {
     if (
@@ -188,6 +205,29 @@ const DeadwoodGame: React.FC = () => {
     }
   }
 
+  const getClaimValidation = () => {
+    if (gameState.pendingAction?.type !== ActionType.CLAIM) return null
+
+    const amount = gameState.pendingAction.amount || 1
+    const currentPlayer = gameState.players[gameState.currentPlayer]
+    const location = gameState.board[currentPlayer.position]
+    const currentInf = getLocationInfluence(location, currentPlayer.id)
+    const maxSpace = location.maxInfluence - currentInf
+    const maxAffordable = currentPlayer.gold
+
+    if (amount > maxAffordable) {
+      return { valid: false, message: 'Not enough gold' }
+    }
+    if (amount > maxSpace) {
+      return { valid: false, message: 'Not enough space at location' }
+    }
+    if (maxSpace === 0) {
+      return { valid: false, message: 'Location is full' }
+    }
+
+    return { valid: true, message: null }
+  }
+
   const getValidChallengeTargets = (): string[] => {
     if (gameState.pendingAction?.type !== ActionType.CHALLENGE) return []
     const currentPlayer = gameState.players[gameState.currentPlayer]
@@ -213,9 +253,10 @@ const DeadwoodGame: React.FC = () => {
           location,
           currentPlayer.id
         )
-        return (
-          currentPlayer.gold >= 1 && currentInfluence < location.maxInfluence
-        )
+        const hasSpace = currentInfluence < location.maxInfluence
+        const hasGold = currentPlayer.gold >= 1
+
+        return hasSpace && hasGold
       }
       case ActionType.CHALLENGE: {
         const cost = getChallengeCost(currentPlayer)
@@ -282,6 +323,17 @@ const DeadwoodGame: React.FC = () => {
           }}
         >
           {gameState.message}
+        </div>
+        <div
+          style={{
+            fontSize: '0.9rem',
+            textAlign: 'center',
+            opacity: 0.8,
+            marginTop: '0.25rem',
+          }}
+        >
+          Round {gameState.roundCount} of 20 • Player{' '}
+          {gameState.currentPlayer + 1} of {gameState.players.length}
         </div>
       </div>
       <div
@@ -499,19 +551,49 @@ const DeadwoodGame: React.FC = () => {
                         currentPlayer.id
                       )
                       const maxSpace = location.maxInfluence - currentInf
-                      const maxClaim = Math.min(currentPlayer.gold, maxSpace)
-                      if (amt > maxClaim) return null
-                      const isValid = amt <= maxClaim
+                      const maxAffordable = currentPlayer.gold
+                      const maxClaim = Math.min(maxAffordable, maxSpace)
+
+                      if (amt > maxClaim) {
+                        return (
+                          <option
+                            key={amt}
+                            value={amt}
+                            disabled={true}
+                            style={{ color: '#999' }}
+                          >
+                            {amt} Gold (Not available)
+                          </option>
+                        )
+                      }
+
                       return (
-                        <option key={amt} value={amt} disabled={!isValid}>
+                        <option key={amt} value={amt}>
                           {amt} Gold = {amt} Influence
-                          {!isValid && ' (Not available)'}
                         </option>
                       )
                     })}
                   </select>
                 </div>
               )}
+              {gameState.pendingAction.type === ActionType.CLAIM &&
+                (() => {
+                  const validation = getClaimValidation()
+                  if (!validation?.valid) {
+                    return (
+                      <div
+                        style={{
+                          color: '#DC143C',
+                          fontSize: '0.8rem',
+                          marginTop: '0.5rem',
+                        }}
+                      >
+                        {validation?.message}
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
               {gameState.challengeTargets && (
                 <div style={{ marginBottom: '1rem' }}>
                   <div

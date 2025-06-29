@@ -17,3 +17,4 @@
 - Updated UI with debouncing and visual feedback
 - Created Playwright and unit tests for validation
 - What's next: ensure other bug fixes behave correctly
+
