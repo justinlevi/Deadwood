@@ -56,3 +56,9 @@
 - Kept action buttons visible across game states, disabling them when AI is active
 - Updated DeadwoodGame to reflect these changes
 - What's next: resolve remaining Playwright test failures
+
+### [2025-06-29 13:44 UTC] Add complete gameplay test suite
+
+- Added comprehensive Playwright tests covering all mechanics
+- Created helper functions and multiple scenarios
+- What's next: monitor CI performance and optimize if needed
