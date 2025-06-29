@@ -15,6 +15,7 @@ import {
 export const checkVictoryConditions = (
   state: GameState
 ): number | undefined => {
+  // Check for immediate victory conditions first
   for (const player of state.players) {
     let maxInfluenceCount = 0
     for (const location of state.board) {
@@ -23,8 +24,10 @@ export const checkVictoryConditions = (
     if (maxInfluenceCount >= 3) return state.players.indexOf(player)
     if (player.totalInfluence >= 12) return state.players.indexOf(player)
   }
-  // Game ends after 20 complete rounds
-  if (state.roundCount > 20) {
+
+  // Check if we've exceeded 20 rounds (game ends after round 20 completes)
+  // When currentPlayer is 0 and roundCount is 21, we've just started round 21
+  if (state.roundCount > 20 && state.currentPlayer === 0) {
     let maxInfluence = -1
     let winner = 0
     state.players.forEach((player, index) => {
@@ -252,16 +255,29 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         if (newCompleted.length >= 2) {
           const nextPlayer = (state.currentPlayer + 1) % state.players.length
           const isNewRound = nextPlayer === 0
-          return {
+          const nextRound = isNewRound ? state.roundCount + 1 : state.roundCount
+
+          // Check victory at the start of a new round
+          const nextState = {
             ...newState,
             currentPlayer: nextPlayer,
-            roundCount: isNewRound ? state.roundCount + 1 : state.roundCount,
+            roundCount: nextRound,
             completedActions: [],
             pendingAction: undefined,
-            message:
-              `Round ${isNewRound ? state.roundCount + 1 : state.roundCount} • ` +
-              `${newState.players[nextPlayer].character.name}'s turn`,
+            message: `Round ${nextRound} • ${newState.players[nextPlayer].character.name}'s turn`,
           }
+
+          const winner = checkVictoryConditions(nextState)
+          if (winner !== undefined) {
+            return {
+              ...nextState,
+              phase: GamePhase.GAME_OVER,
+              winner,
+              message: `${nextState.players[winner].name} wins!`,
+            }
+          }
+
+          return nextState
         }
 
         return {
@@ -375,14 +391,29 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       if (newCompletedActions.length >= 2) {
         const nextPlayer = (state.currentPlayer + 1) % state.players.length
         const isNewRound = nextPlayer === 0
-        return {
+        const nextRound = isNewRound ? state.roundCount + 1 : state.roundCount
+
+        // Check victory at the start of a new round
+        const nextState = {
           ...newState,
           currentPlayer: nextPlayer,
-          roundCount: isNewRound ? state.roundCount + 1 : state.roundCount,
+          roundCount: nextRound,
           completedActions: [],
           pendingAction: undefined,
-          message: `Round ${isNewRound ? state.roundCount + 1 : state.roundCount} • ${newState.players[nextPlayer].character.name}'s turn`,
+          message: `Round ${nextRound} • ${newState.players[nextPlayer].character.name}'s turn`,
         }
+
+        const winner = checkVictoryConditions(nextState)
+        if (winner !== undefined) {
+          return {
+            ...nextState,
+            phase: GamePhase.GAME_OVER,
+            winner,
+            message: `${nextState.players[winner].name} wins!`,
+          }
+        }
+
+        return nextState
       }
       return {
         ...newState,
@@ -403,7 +434,17 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       }
     }
     case 'END_TURN': {
-      const winner = checkVictoryConditions(state)
+      const nextPlayer = (state.currentPlayer + 1) % state.players.length
+      const isNewRound = nextPlayer === 0
+      const nextRound = isNewRound ? state.roundCount + 1 : state.roundCount
+
+      // Check victory at the start of a new round if we've completed 20 rounds
+      const winner = checkVictoryConditions({
+        ...state,
+        currentPlayer: nextPlayer,
+        roundCount: nextRound,
+      })
+
       if (winner !== undefined) {
         return {
           ...state,
@@ -412,15 +453,14 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           message: `${state.players[winner].name} wins!`,
         }
       }
-      const nextPlayer = (state.currentPlayer + 1) % state.players.length
-      const isNewRound = nextPlayer === 0
+
       return {
         ...state,
         currentPlayer: nextPlayer,
-        roundCount: isNewRound ? state.roundCount + 1 : state.roundCount,
+        roundCount: nextRound,
         completedActions: [],
         pendingAction: undefined,
-        message: `Round ${isNewRound ? state.roundCount + 1 : state.roundCount} • ${state.players[nextPlayer].character.name}'s turn`,
+        message: `Round ${nextRound} • ${state.players[nextPlayer].character.name}'s turn`,
       }
     }
     case 'SET_STATE': {
