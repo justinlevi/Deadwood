@@ -16,6 +16,7 @@ test('game ends immediately when reaching 12 influence', async ({ page }) => {
           {
             id: 'player-0',
             name: 'You',
+            color: '#000',
             character: { id: 'al', name: 'Al Swearengen', ability: '' },
             position: 0,
             gold: 3,
@@ -26,6 +27,7 @@ test('game ends immediately when reaching 12 influence', async ({ page }) => {
           {
             id: 'player-1',
             name: 'AI Player 1',
+            color: '#000',
             character: { id: 'seth', name: 'Seth Bullock', ability: '' },
             position: 1,
             gold: 3,
@@ -83,6 +85,7 @@ test('game ends after first action with location control victory', async ({ page
           {
             id: 'player-0',
             name: 'You',
+            color: '#000',
             character: { id: 'al', name: 'Al Swearengen', ability: '' },
             position: 2,
             gold: 3,
@@ -93,6 +96,7 @@ test('game ends after first action with location control victory', async ({ page
           {
             id: 'player-1',
             name: 'AI Player 1',
+            color: '#000',
             character: { id: 'seth', name: 'Seth Bullock', ability: '' },
             position: 3,
             gold: 3,

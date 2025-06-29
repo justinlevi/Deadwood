@@ -7,6 +7,7 @@ const makePlayer = (id: number, gold = 3, position = 0) => ({
   id: `p${id}`,
   name: `Player ${id}`,
   character: { id: 'test', name: 'Test', ability: '', description: '' },
+  color: '#000',
   position,
   gold,
   totalInfluence: 0,

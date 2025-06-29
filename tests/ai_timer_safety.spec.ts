@@ -21,6 +21,7 @@ test('AI actions are cancelled when game ends', async ({ page }) => {
           {
             id: 'player-0',
             name: 'You',
+            color: '#000',
             totalInfluence: 11,
             gold: 3,
             position: 0,
@@ -31,6 +32,7 @@ test('AI actions are cancelled when game ends', async ({ page }) => {
           {
             id: 'player-1',
             name: 'AI Player 1',
+            color: '#000',
             isAI: true,
             position: 1,
             gold: 3,

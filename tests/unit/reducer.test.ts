@@ -54,6 +54,7 @@ const makePlayer = (index: number, position = 0) => ({
   id: `player-${index}`,
   name: `Player ${index}`,
   character: CHARACTERS[index % CHARACTERS.length],
+  color: '#000',
   position,
   gold: 3,
   totalInfluence: 0,

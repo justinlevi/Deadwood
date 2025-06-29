@@ -18,6 +18,7 @@ test('challenge action targets correct player', async ({ page }) => {
           {
             id: 'player-0',
             name: 'You',
+            color: '#000',
             character: { id: 'al', name: 'Al Swearengen', ability: '' },
             position: 0,
             gold: 5,
@@ -28,6 +29,7 @@ test('challenge action targets correct player', async ({ page }) => {
           {
             id: 'player-1',
             name: 'AI Player 1',
+            color: '#000',
             character: { id: 'seth', name: 'Seth Bullock', ability: '' },
             position: 0,
             gold: 3,

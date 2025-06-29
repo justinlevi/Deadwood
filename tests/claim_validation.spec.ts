@@ -17,6 +17,7 @@ test('claim amount dropdown shows correct options', async ({ page }) => {
           {
             id: 'player-0',
             name: 'You',
+            color: '#000',
             character: { id: 'al', name: 'Al Swearengen', ability: '' },
             position: 0,
             gold: 2,

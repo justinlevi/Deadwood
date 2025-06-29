@@ -9,6 +9,7 @@ const makePlayer = (charIndex: number, position = 0, gold = 3) => ({
   id: `p${charIndex}`,
   name: `P${charIndex}`,
   character: CHARACTERS[charIndex],
+  color: '#000',
   position,
   gold,
   totalInfluence: 0,

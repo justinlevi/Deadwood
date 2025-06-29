@@ -86,9 +86,9 @@
 - Clear failsafe on turn completion or exit
 - What's next: monitor AI behavior under stress
 
-### [2025-06-29 17:13 UTC] Add action log UI
+### [2025-06-29 17:23 UTC] Color code influence stars
 
-- Introduced optional `actionLog` to `GameState` for storing descriptions
-- Logged each executed action with simple reasoning in `executeAction`
-- Displayed a scrollable log at the bottom of the action panel
-- What's next: confirm UI updates pass tests
+- Added `color` property to `Player` type and assigned colors on player creation
+- Updated LocationCard to style influence stars using each player's color
+- Adjusted unit and e2e tests for new property
+- What's next: ensure tests and build succeed
