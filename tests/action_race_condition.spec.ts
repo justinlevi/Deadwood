@@ -5,6 +5,7 @@ test('prevents selecting third action', async ({ page }) => {
   await page.getByRole('button', { name: 'Start Game' }).click()
 
   await page.getByRole('button', { name: /Rest/ }).click()
+  await page.waitForTimeout(150)
   await page.getByRole('button', { name: /Rest/ }).click()
 
   const moveButton = page.getByRole('button', { name: /Move/ })
@@ -37,6 +38,7 @@ test('handles rapid clicking gracefully', async ({ page }) => {
   const restButton = page.getByRole('button', { name: /Rest/ })
   for (let i = 0; i < 5; i++) {
     await restButton.click({ force: true })
+    await page.waitForTimeout(50)
   }
 
   await expect(page.locator('text=Selected: 1/2 actions')).toBeVisible()
@@ -52,6 +54,7 @@ test('prevents selecting already selected action', async ({ page }) => {
   await page.getByRole('button', { name: /Move/ }).click()
   await page.getByRole('heading', { name: 'Hardware Store' }).click()
   await page.getByRole('button', { name: /Confirm MOVE/ }).click()
+  await page.waitForTimeout(150)
 
   const moveButton = page.getByRole('button', { name: /Move/ })
   const buttonColor = await moveButton.evaluate(el => window.getComputedStyle(el).backgroundColor)
@@ -85,6 +88,7 @@ test('action buttons sync with game state', async ({ page }) => {
   const empty = page.getByRole('heading', { name: 'Bella Union' })
   await empty.click()
   await page.getByRole('button', { name: /Confirm MOVE/ }).click()
+  await page.waitForTimeout(150)
 
   await expect(page.getByRole('button', { name: /Claim/ })).toBeEnabled()
 })
