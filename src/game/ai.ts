@@ -1,12 +1,26 @@
 import type { PendingAction, GameState } from './types'
 import { ActionType } from './types'
 import { LOCATIONS } from './board'
-import { getLocationInfluence, getChallengeCost, canChallenge } from './utils'
+import {
+  getLocationInfluence,
+  getChallengeCost,
+  canChallenge,
+  getPlayerSafe,
+  getLocationSafe,
+} from './utils'
 
 const generateAIActions = (state: GameState): PendingAction[] => {
-  const currentPlayer = state.players[state.currentPlayer]
+  const currentPlayer = getPlayerSafe(state.players, state.currentPlayer)
+  if (!currentPlayer) {
+    console.error('AI: Invalid current player')
+    return []
+  }
   const actions: PendingAction[] = []
-  const location = state.board[currentPlayer.position]
+  const location = getLocationSafe(state.board, currentPlayer.position)
+  if (!location) {
+    console.error('AI: Invalid current location')
+    return []
+  }
   const currentInfluence = getLocationInfluence(location, currentPlayer.id)
   const maxClaim = Math.min(
     currentPlayer.gold,
@@ -16,12 +30,13 @@ const generateAIActions = (state: GameState): PendingAction[] => {
     actions.push({ type: ActionType.CLAIM, amount: Math.min(2, maxClaim) })
   }
   if (currentPlayer.gold >= getChallengeCost(currentPlayer)) {
-    const validTargets = state.players.filter(
-      (p, i) =>
-        i !== state.currentPlayer &&
-        canChallenge(currentPlayer, p) &&
-        state.board[p.position].influences[p.id] > 0
-    )
+    const validTargets = state.players.filter((p, i) => {
+      if (i === state.currentPlayer) return false
+      if (!canChallenge(currentPlayer, p)) return false
+      const loc = getLocationSafe(state.board, p.position)
+      if (!loc) return false
+      return loc.influences[p.id] > 0
+    })
     if (validTargets.length > 0) {
       actions.push({
         type: ActionType.CHALLENGE,
@@ -33,7 +48,8 @@ const generateAIActions = (state: GameState): PendingAction[] => {
     if (currentPlayer.gold < 2) {
       actions.push({ type: ActionType.REST })
     } else {
-      const adjacentLocs = LOCATIONS[currentPlayer.position].adjacent
+      const loc = LOCATIONS[currentPlayer.position]
+      const adjacentLocs = loc ? loc.adjacent : []
       const targetLoc =
         adjacentLocs[Math.floor(Math.random() * adjacentLocs.length)]
       actions.push({ type: ActionType.MOVE, target: targetLoc })

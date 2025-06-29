@@ -18,7 +18,16 @@
 - Updated action availability logic
 - Added comprehensive unit and e2e tests
 - What's next: ensure all tests pass and finalize PR
+
 ### [2025-06-29 00:01 UTC] Restore reducer tests
+
 - Resolved merge conflict markers in reducer.test.ts
 - Re-ran lint, tests, and build successfully
 - What's next: monitor CI results
+
+### [2025-06-29 00:45 UTC] Implement bounds safety checks
+
+- Added safe accessor functions and replaced direct array access across reducer, UI, and AI
+- Created comprehensive unit and e2e tests for invalid indices
+- Updated DeadwoodGame to show error UI on corrupted state
+- What's next: verify tests pass and finalize PR

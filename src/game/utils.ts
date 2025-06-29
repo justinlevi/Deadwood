@@ -36,7 +36,9 @@ export const getPlayerSafe = (
   index: number
 ): Player | undefined => {
   if (index < 0 || index >= players.length) {
-    console.error(`Invalid player index: ${index}`)
+    console.error(
+      `Invalid player index: ${index}, array length: ${players.length}`
+    )
     return undefined
   }
   return players[index]
@@ -47,19 +49,32 @@ export const getLocationSafe = (
   index: number
 ): Location | undefined => {
   if (index < 0 || index >= board.length) {
-    console.error(`Invalid location index: ${index}`)
+    console.error(
+      `Invalid location index: ${index}, array length: ${board.length}`
+    )
     return undefined
   }
   return board[index]
 }
 
-export const findPlayerIndex = (
+export const findPlayerIndexSafe = (
   players: Player[],
   playerId: string
 ): number => {
-  const idx = players.findIndex((p) => p.id === playerId)
-  if (idx === -1) {
+  const index = players.findIndex((p) => p.id === playerId)
+  if (index === -1) {
     console.error(`Player not found: ${playerId}`)
   }
-  return idx
+  return index
+}
+
+export const getPlayerByIdSafe = (
+  players: Player[],
+  playerId: string
+): Player | undefined => {
+  const player = players.find((p) => p.id === playerId)
+  if (!player) {
+    console.error(`Player not found: ${playerId}`)
+  }
+  return player
 }

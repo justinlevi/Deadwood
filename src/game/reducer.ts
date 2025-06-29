@@ -9,7 +9,7 @@ import {
   canChallenge,
   getPlayerSafe,
   getLocationSafe,
-  findPlayerIndex,
+  findPlayerIndexSafe,
 } from './utils'
 
 export const checkVictoryConditions = (
@@ -67,7 +67,11 @@ export const executeAction = (
   state: GameState,
   action: PendingAction
 ): GameState => {
-  const currentPlayer = getPlayerSafe(state.players, state.currentPlayer)!
+  const currentPlayer = getPlayerSafe(state.players, state.currentPlayer)
+  if (!currentPlayer) {
+    console.error('Invalid current player index')
+    return state
+  }
   const newBoard = [...state.board]
   const newPlayers = [...state.players]
   switch (action.type) {
@@ -91,7 +95,7 @@ export const executeAction = (
       if (action.target === 0) {
         const alPlayer = newPlayers.find((p) => p.character.id === 'al')
         if (alPlayer && currentPlayer.character.id !== 'al') {
-          const alIndex = findPlayerIndex(newPlayers, alPlayer.id)
+          const alIndex = findPlayerIndexSafe(newPlayers, alPlayer.id)
           if (alIndex !== -1) {
             newPlayers[alIndex] = { ...alPlayer, gold: alPlayer.gold + 1 }
           }
@@ -101,7 +105,11 @@ export const executeAction = (
     }
     case ActionType.CLAIM: {
       const amount = action.amount || 1
-      const location = newBoard[currentPlayer.position]
+      const location = getLocationSafe(newBoard, currentPlayer.position)
+      if (!location) {
+        console.error('Invalid current position')
+        break
+      }
       const currentInfluence = getLocationInfluence(location, currentPlayer.id)
       const maxSpace = location.maxInfluence - currentInfluence
       const maxAffordable = currentPlayer.gold
@@ -143,7 +151,7 @@ export const executeAction = (
         break
       }
 
-      const targetPlayer = newPlayers[action.target]
+      const targetPlayer = getPlayerSafe(newPlayers, action.target)
       if (!targetPlayer) {
         console.error('Target player not found')
         break
@@ -155,7 +163,8 @@ export const executeAction = (
         break
       }
 
-      const location = newBoard[targetPlayer.position]
+      const location = getLocationSafe(newBoard, targetPlayer.position)
+      if (!location) break
       const targetInfluence = getLocationInfluence(location, targetPlayer.id)
 
       // Check if target has influence BEFORE deducting gold
