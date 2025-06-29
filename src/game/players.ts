@@ -28,6 +28,8 @@ export const CHARACTERS: Character[] = [
   },
 ]
 
+export const PLAYER_COLORS = ['#ff4500', '#1e90ff', '#32cd32', '#ffd700']
+
 export const createPlayers = (playerCount: number): Player[] => {
   const shuffledCharacters = [...CHARACTERS].sort(() => Math.random() - 0.5)
   const players: Player[] = []
@@ -36,6 +38,7 @@ export const createPlayers = (playerCount: number): Player[] => {
       id: `player-${i}`,
       name: i === 0 ? 'You' : `AI Player ${i}`,
       character: shuffledCharacters[i],
+      color: PLAYER_COLORS[i % PLAYER_COLORS.length],
       position: Math.floor(Math.random() * LOCATIONS.length),
       gold: 3,
       totalInfluence: 0,

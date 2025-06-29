@@ -20,6 +20,7 @@ test('AI completes its turn automatically', async ({ page }) => {
           {
             id: 'player-0',
             name: 'AI 1',
+            color: '#000',
             position: 0,
             gold: 3,
             totalInfluence: 0,
@@ -30,6 +31,7 @@ test('AI completes its turn automatically', async ({ page }) => {
           {
             id: 'player-1',
             name: 'AI 2',
+            color: '#000',
             position: 1,
             gold: 3,
             totalInfluence: 0,

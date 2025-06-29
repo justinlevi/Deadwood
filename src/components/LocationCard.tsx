@@ -48,6 +48,10 @@ const LocationCard: React.FC<Props> = ({
                 key={playerId}
                 className={styles.influence}
                 data-current={playerId === currentPlayerId}
+                style={{
+                  color:
+                    playerId === currentPlayerId ? '#006400' : player.color,
+                }}
               >
                 {'★'.repeat(influence)}
               </div>

@@ -52,6 +52,7 @@ test('challenge with invalid target index', async ({ page }) => {
           {
             id: 'player-0',
             name: 'Test',
+            color: '#000',
             position: 0,
             gold: 3,
             totalInfluence: 0,

@@ -17,6 +17,7 @@ test('cannot challenge player with no influence', async ({ page }) => {
           {
             id: 'player-0',
             name: 'You',
+            color: '#000',
             character: {
               id: 'seth',
               name: 'Seth Bullock',
@@ -31,6 +32,7 @@ test('cannot challenge player with no influence', async ({ page }) => {
           {
             id: 'player-1',
             name: 'AI Player 1',
+            color: '#000',
             character: { id: 'al', name: 'Al Swearengen', ability: '' },
             position: 0,
             gold: 3,
@@ -91,6 +93,7 @@ test('challenge only deducts gold when successful', async ({ page }) => {
           {
             id: 'player-0',
             name: 'You',
+            color: '#000',
             character: {
               id: 'seth',
               name: 'Seth Bullock',
@@ -105,6 +108,7 @@ test('challenge only deducts gold when successful', async ({ page }) => {
           {
             id: 'player-1',
             name: 'AI Player 1',
+            color: '#000',
             character: { id: 'al', name: 'Al Swearengen', ability: '' },
             position: 0,
             gold: 3,

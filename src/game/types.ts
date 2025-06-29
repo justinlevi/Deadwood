@@ -14,6 +14,7 @@ export interface Player {
   id: string
   name: string
   character: Character
+  color: string
   position: number
   gold: number
   totalInfluence: number

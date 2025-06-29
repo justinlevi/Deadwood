@@ -136,6 +136,7 @@ test.describe('Victory Conditions', () => {
             {
               id: 'player-0',
               name: 'You',
+              color: '#000',
               character: { id: 'al', name: 'Al Swearengen', ability: '' },
               position: 0,
               gold: 3,
@@ -146,6 +147,7 @@ test.describe('Victory Conditions', () => {
             {
               id: 'player-1',
               name: 'AI Player 1',
+              color: '#000',
               character: { id: 'seth', name: 'Seth Bullock', ability: '' },
               position: 1,
               gold: 3,
@@ -197,6 +199,7 @@ test.describe('Victory Conditions', () => {
             {
               id: 'player-0',
               name: 'You',
+              color: '#000',
               character: { id: 'al', name: 'Al Swearengen', ability: '' },
               position: 2, // Bella Union
               gold: 3,
@@ -207,6 +210,7 @@ test.describe('Victory Conditions', () => {
             {
               id: 'player-1',
               name: 'AI Player 1',
+              color: '#000',
               character: { id: 'seth', name: 'Seth Bullock', ability: '' },
               position: 3,
               gold: 3,
@@ -260,6 +264,7 @@ test.describe('Victory Conditions', () => {
             {
               id: 'player-0',
               name: 'You',
+              color: '#000',
               character: { id: 'al', name: 'Al Swearengen', ability: '' },
               position: 0,
               gold: 10,
@@ -270,6 +275,7 @@ test.describe('Victory Conditions', () => {
             {
               id: 'player-1',
               name: 'AI Player 1',
+              color: '#000',
               character: { id: 'seth', name: 'Seth Bullock', ability: '' },
               position: 1,
               gold: 5,
@@ -324,6 +330,7 @@ test.describe('Character Abilities', () => {
             {
               id: 'player-0',
               name: 'You',
+              color: '#000',
               character: { id: 'seth', name: 'Seth Bullock', ability: '' },
               position: 1, // Hardware Store
               gold: 3,
@@ -334,6 +341,7 @@ test.describe('Character Abilities', () => {
             {
               id: 'player-1',
               name: 'Al',
+              color: '#000',
               character: {
                 id: 'al',
                 name: 'Al Swearengen',
@@ -389,6 +397,7 @@ test.describe('Character Abilities', () => {
             {
               id: 'player-0',
               name: 'You',
+              color: '#000',
               character: {
                 id: 'seth',
                 name: 'Seth Bullock',
@@ -403,6 +412,7 @@ test.describe('Character Abilities', () => {
             {
               id: 'player-1',
               name: 'AI Player 1',
+              color: '#000',
               character: { id: 'al', name: 'Al Swearengen', ability: '' },
               position: 0,
               gold: 3,
@@ -455,6 +465,7 @@ test.describe('Character Abilities', () => {
             {
               id: 'player-0',
               name: 'You',
+              color: '#000',
               character: {
                 id: 'cy',
                 name: 'Cy Tolliver',
@@ -469,6 +480,7 @@ test.describe('Character Abilities', () => {
             {
               id: 'player-1',
               name: 'Target',
+              color: '#000',
               character: { id: 'al', name: 'Al Swearengen', ability: '' },
               position: 1, // Hardware Store (adjacent)
               gold: 3,
@@ -526,6 +538,7 @@ test.describe('Character Abilities', () => {
             {
               id: 'player-0',
               name: 'You',
+              color: '#000',
               character: {
                 id: 'jane',
                 name: 'Calamity Jane',
@@ -583,6 +596,7 @@ test.describe('Game Mechanics', () => {
             {
               id: 'player-0',
               name: 'You',
+              color: '#000',
               character: { id: 'al', name: 'Al Swearengen', ability: '' },
               position: 0,
               gold: 5,
@@ -644,6 +658,7 @@ test.describe('Game Mechanics', () => {
             {
               id: 'player-0',
               name: 'You',
+              color: '#000',
               character: { id: 'al', name: 'Al Swearengen', ability: '' },
               position: 0,
               gold: 3,
@@ -654,6 +669,7 @@ test.describe('Game Mechanics', () => {
             {
               id: 'player-1',
               name: 'AI Player 1',
+              color: '#000',
               character: { id: 'seth', name: 'Seth Bullock', ability: '' },
               position: 0,
               gold: 3,
@@ -712,6 +728,7 @@ test.describe('Game Mechanics', () => {
             {
               id: 'player-0',
               name: 'You',
+              color: '#000',
               character: { id: 'al', name: 'Al Swearengen', ability: '' },
               position: 0,
               gold: 5,
@@ -722,6 +739,7 @@ test.describe('Game Mechanics', () => {
             {
               id: 'player-1',
               name: 'AI Player 1',
+              color: '#000',
               character: { id: 'seth', name: 'Seth Bullock', ability: '' },
               position: 0,
               gold: 3,
@@ -732,6 +750,7 @@ test.describe('Game Mechanics', () => {
             {
               id: 'player-2',
               name: 'AI Player 2',
+              color: '#000',
               character: { id: 'cy', name: 'Cy Tolliver', ability: '' },
               position: 0,
               gold: 3,
@@ -843,6 +862,7 @@ test.describe('Error Handling', () => {
             {
               id: 'player-0',
               name: 'You',
+              color: '#000',
               character: { id: 'al', name: 'Al Swearengen', ability: '' },
               position: 0,
               gold: 0, // No gold
