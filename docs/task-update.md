@@ -69,8 +69,13 @@
 - Introduced synchronous disabled action tracking to prevent multi-click issues
 - Adjusted startGame helper and round display waits in e2e tests
 - What's next: verify all tests pass
-### [2025-06-29 15:30 UTC] Attempt to stabilize tests
-- Reworked action disable logic in DeadwoodGame to remove temporary disabling
-- Added small waits in action_race_condition Playwright tests
-- Tests still failing; further debugging required
-- What's next: investigate failing Playwright scenarios in depth
+
+### [2025-06-29 15:28 UTC] Add requirements builder files
+
+- Added rizethereum-claude-code-requirements-builder directory with commands, examples, and docs
+- What's next: ensure tests pass and monitor integration
+
+### [2025-06-29 16:08 UTC] Move requirements builder
+
+- Relocated files into `.claude` directory and removed subdirectory
+- What's next: verify tests pass
