@@ -74,7 +74,7 @@ describe('challenge action targeting', () => {
         { ...makePlayer(1, 0), totalInfluence: 2 },
       ],
       board,
-      turnCount: 1,
+      roundCount: 1,
       gameConfig: { playerCount: 2, aiDifficulty: 'medium' as const },
       actionHistory: [],
       completedActions: [],

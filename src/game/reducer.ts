@@ -6,6 +6,7 @@ import {
   getMoveCost,
   getChallengeCost,
   getLocationInfluence,
+  canChallenge,
   getPlayerSafe,
   getLocationSafe,
   findPlayerIndex,
@@ -22,7 +23,8 @@ export const checkVictoryConditions = (
     if (maxInfluenceCount >= 3) return state.players.indexOf(player)
     if (player.totalInfluence >= 12) return state.players.indexOf(player)
   }
-  if (state.roundCount >= 20) {
+  // Game ends after 20 complete rounds
+  if (state.roundCount > 20) {
     let maxInfluence = -1
     let winner = 0
     state.players.forEach((player, index) => {
@@ -135,34 +137,59 @@ export const executeAction = (
     case ActionType.CHALLENGE: {
       if (action.target === undefined) break
 
-      // Validate target index
+      // Validate target index first
       if (action.target < 0 || action.target >= newPlayers.length) {
         console.error('Invalid challenge target index:', action.target)
         break
       }
 
-      const challengeCost = getChallengeCost(currentPlayer)
       const targetPlayer = newPlayers[action.target]
+      if (!targetPlayer) {
+        console.error('Target player not found')
+        break
+      }
+
+      // Check if current player can challenge target (position check)
+      if (!canChallenge(currentPlayer, targetPlayer)) {
+        console.error('Cannot challenge: target not in valid position')
+        break
+      }
+
       const location = newBoard[targetPlayer.position]
       const targetInfluence = getLocationInfluence(location, targetPlayer.id)
 
-      if (targetInfluence > 0) {
-        newBoard[targetPlayer.position] = {
-          ...location,
-          influences: {
-            ...location.influences,
-            [targetPlayer.id]: targetInfluence - 1,
-          },
-        }
-        newPlayers[action.target] = {
-          ...targetPlayer,
-          totalInfluence: targetPlayer.totalInfluence - 1,
-        }
-        newPlayers[state.currentPlayer] = {
-          ...currentPlayer,
-          gold: currentPlayer.gold - challengeCost,
-        }
+      // Check if target has influence BEFORE deducting gold
+      if (targetInfluence <= 0) {
+        console.warn('Cannot challenge: target has no influence at location')
+        break
       }
+
+      // Check if current player has enough gold
+      const challengeCost = getChallengeCost(currentPlayer)
+      if (currentPlayer.gold < challengeCost) {
+        console.warn('Cannot challenge: insufficient gold')
+        break
+      }
+
+      // All validations passed, now execute the challenge
+      newBoard[targetPlayer.position] = {
+        ...location,
+        influences: {
+          ...location.influences,
+          [targetPlayer.id]: targetInfluence - 1,
+        },
+      }
+
+      newPlayers[action.target] = {
+        ...targetPlayer,
+        totalInfluence: targetPlayer.totalInfluence - 1,
+      }
+
+      newPlayers[state.currentPlayer] = {
+        ...currentPlayer,
+        gold: currentPlayer.gold - challengeCost,
+      }
+
       break
     }
     case ActionType.REST: {
@@ -253,6 +280,23 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           }
         }
       }
+      if (actionType === ActionType.CHALLENGE) {
+        const cost = getChallengeCost(currentPlayer)
+        if (currentPlayer.gold < cost) {
+          console.warn('Cannot select challenge: insufficient gold')
+          return state
+        }
+        const hasValidTargets = state.players.some((p, i) => {
+          if (i === state.currentPlayer) return false
+          if (!canChallenge(currentPlayer, p)) return false
+          const influence = getLocationInfluence(state.board[p.position], p.id)
+          return influence > 0
+        })
+        if (!hasValidTargets) {
+          console.warn('Cannot select challenge: no valid targets')
+          return state
+        }
+      }
       return {
         ...state,
         pendingAction: { type: actionType },
@@ -264,6 +308,35 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     }
     case 'SET_ACTION_TARGET': {
       if (!state.pendingAction) return state
+
+      // Validate challenge targets before setting
+      if (
+        state.pendingAction.type === ActionType.CHALLENGE &&
+        action.payload.target !== undefined
+      ) {
+        const targetIndex = action.payload.target
+        const currentPlayer = state.players[state.currentPlayer]
+
+        if (targetIndex < 0 || targetIndex >= state.players.length) {
+          console.error('Invalid target index')
+          return state
+        }
+
+        const targetPlayer = state.players[targetIndex]
+        if (!canChallenge(currentPlayer, targetPlayer)) {
+          console.error('Cannot challenge this target')
+          return state
+        }
+
+        const targetInfluence = getLocationInfluence(
+          state.board[targetPlayer.position],
+          targetPlayer.id
+        )
+        if (targetInfluence <= 0) {
+          console.error('Target has no influence to challenge')
+          return state
+        }
+      }
       return {
         ...state,
         pendingAction: {
@@ -371,7 +444,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         currentPlayer: 0,
         players: [],
         board: createInitialBoard(),
-        roundCount: 0,
+        roundCount: 1,
         gameConfig: { playerCount: 2, aiDifficulty: 'medium' },
         actionHistory: [],
         completedActions: [],

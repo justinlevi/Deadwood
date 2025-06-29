@@ -11,7 +11,7 @@
 - Updated cancel action to clear challenge target list
 - What's next: review remaining bug fixes
 
-### [2025-06-28 23:46 UTC] Claim amount validation fix
+### [2025-06-28 23:45 UTC] Fix challenge validation bug
 
 - Implemented robust backend claim validation
 - Improved dropdown options and added UI feedback
