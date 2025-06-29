@@ -14,7 +14,7 @@ async function startGame(page: Page, options?: { players?: number; difficulty?: 
   }
 
   await page.getByRole('button', { name: 'Start Game' }).click()
-  await expect(page.locator('text=Round 1')).toBeVisible()
+  await expect(page.locator('text=Round 1 \u2022')).toBeVisible()
 }
 
 async function waitForAI(page: Page, timeout = 5000) {
