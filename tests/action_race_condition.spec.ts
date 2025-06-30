@@ -8,9 +8,7 @@ test('prevents selecting third action', async ({ page }) => {
   await page.getByRole('button', { name: /Rest/ }).click()
 
   // Wait for AI turn to start since both actions complete automatically
-  await expect(page.locator('text=AI Player')).toBeVisible({ timeout: 3000 })
-
-  await expect(page.locator('text=AI Player')).toBeVisible({ timeout: 3000 })
+  await expect(page.locator('[data-testid="current-player"] >> text=AI Player')).toBeVisible({ timeout: 3000 })
 })
 
 test('prevents action during pending action', async ({ page }) => {
@@ -41,7 +39,8 @@ test('handles rapid clicking gracefully', async ({ page }) => {
   await expect(page.locator('text=Selected: 1/2 actions')).toBeVisible()
 
   await restButton.click()
-  await expect(page.locator('text=AI Player')).toBeVisible({ timeout: 3000 })
+  // Wait for AI turn by checking the current player name contains "AI Player"
+  await expect(page.locator('[data-testid="current-player"] >> text=AI Player')).toBeVisible({ timeout: 3000 })
 })
 
 test('prevents selecting already selected action', async ({ page }) => {

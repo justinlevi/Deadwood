@@ -1,0 +1,169 @@
+.simulator-control {
+  display: grid;
+  gap: 2rem;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.config-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.config-group label {
+  font-weight: 500;
+  color: #2c3e50;
+  font-size: 0.9rem;
+}
+
+.config-group input,
+.config-group select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.config-group input:focus,
+.config-group select:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.config-group input:disabled,
+.config-group select:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.strategy-selection {
+  margin-bottom: 1.5rem;
+}
+
+.strategy-selection label {
+  display: block;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.strategy-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  background-color: #f8f9fa;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.chip:hover {
+  background-color: #e9ecef;
+}
+
+.chip.active {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.button-primary {
+  background-color: #3498db;
+  color: white;
+}
+
+.button-primary:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.button-secondary {
+  background-color: #95a5a6;
+  color: white;
+}
+
+.button-secondary:hover:not(:disabled) {
+  background-color: #7f8c8d;
+}
+
+.button-outline {
+  background-color: transparent;
+  color: #3498db;
+  border: 1px solid #3498db;
+}
+
+.button-outline:hover:not(:disabled) {
+  background-color: #3498db;
+  color: white;
+}
+
+.button-large {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.control-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.progress-bar {
+  margin-top: 1rem;
+  height: 4px;
+  background-color: #e9ecef;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #3498db;
+  animation: progress 2s ease-in-out infinite;
+}
+
+@keyframes progress {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}

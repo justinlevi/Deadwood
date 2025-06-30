@@ -102,7 +102,7 @@ test.describe('UI State Display - Focused Tests', () => {
       has: page.locator('h3:text("The Freight Office")') 
     }).first()
     // Look for move cost indicator specifically
-    await expect(freightOffice.locator('.moveCost, [class*="moveCost"]').first()).toContainText('1g')
+    await expect(freightOffice.locator('[data-testid="move-cost"]').first()).toContainText('1g')
   })
 
   test('error messages display correctly', async ({ page }) => {

@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020"],
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "outDir": "./dist",
+    "rootDir": "../",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "../../src/logging": ["./mock-modules.ts"]
+    }
+  },
+  "include": [
+    "./**/*.ts",
+    "../src/game/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "dashboard/node_modules",
+    "dashboard/dist"
+  ]
+}

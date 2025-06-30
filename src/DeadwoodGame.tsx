@@ -17,6 +17,7 @@ import GameSetup from './components/GameSetup'
 import LocationCard from './components/LocationCard'
 import ActionButton from './components/ActionButton'
 import GameOver from './components/GameOver'
+import ConfirmModal from './components/ConfirmModal'
 
 const DeadwoodGame: React.FC = () => {
   const initialState: GameState = {
@@ -31,21 +32,21 @@ const DeadwoodGame: React.FC = () => {
     completedActions: [],
     pendingAction: undefined,
     message: '',
+    selectedLocation: undefined,
   }
   const [gameState, dispatch] = useReducer(gameReducer, initialState)
 
-  const currentPlayer = getPlayerSafe(
-    gameState.players,
-    gameState.currentPlayer
-  )
+  const currentPlayer = gameState.phase !== GamePhase.SETUP 
+    ? getPlayerSafe(gameState.players, gameState.currentPlayer)
+    : null
 
   if (!currentPlayer && gameState.phase === GamePhase.PLAYER_TURN) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>
+      <div className="p-8 text-center text-red-500">
         Error: Invalid game state - current player not found
         <button
           onClick={() => dispatch({ type: 'RESET_GAME' })}
-          style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}
+          className="mt-4 px-4 py-2 bg-deadwood-red text-white rounded hover:bg-red-700 transition-colors"
         >
           Reset Game
         </button>
@@ -159,21 +160,18 @@ const DeadwoodGame: React.FC = () => {
       return
     }
 
-    dispatch({ type: 'SELECT_ACTION', payload: action })
-  }
-
-  const handleLocationClick = (locationId: number) => {
-    if (!gameState.pendingAction) return
-    if (gameState.pendingAction.type === ActionType.MOVE) {
-      dispatch({ type: 'SET_ACTION_TARGET', payload: { target: locationId } })
-    } else if (gameState.pendingAction.type === ActionType.CHALLENGE) {
-      const location = getLocationSafe(gameState.board, locationId)
-      if (!location) {
-        console.error('Invalid location clicked')
-        return
-      }
+    // For move and challenge actions, use the selected location
+    if (action === ActionType.MOVE && gameState.selectedLocation !== undefined) {
+      dispatch({ type: 'SELECT_ACTION', payload: action })
+      dispatch({ type: 'SET_ACTION_TARGET', payload: { target: gameState.selectedLocation } })
+    } else if (action === ActionType.CHALLENGE && gameState.selectedLocation !== undefined) {
+      dispatch({ type: 'SELECT_ACTION', payload: action })
+      
+      const location = getLocationSafe(gameState.board, gameState.selectedLocation)
+      if (!location) return
+      
       const playersAtLocation = gameState.players.filter(
-        (p) => p.position === locationId
+        (p) => p.position === gameState.selectedLocation
       )
       const cp = currentPlayer!
       const validTargets = playersAtLocation.filter(
@@ -183,13 +181,7 @@ const DeadwoodGame: React.FC = () => {
           getLocationInfluence(gameState.board[p.position], p.id) > 0
       )
 
-      if (validTargets.length === 1) {
-        const targetIndex = gameState.players.indexOf(validTargets[0])
-        dispatch({
-          type: 'SET_ACTION_TARGET',
-          payload: { target: targetIndex },
-        })
-      } else if (validTargets.length > 1) {
+      if (validTargets.length > 0) {
         dispatch({
           type: 'SHOW_CHALLENGE_TARGETS',
           payload: validTargets.map((p) => ({
@@ -198,7 +190,14 @@ const DeadwoodGame: React.FC = () => {
           })),
         })
       }
+    } else {
+      dispatch({ type: 'SELECT_ACTION', payload: action })
     }
+  }
+
+  const handleLocationClick = (locationId: number) => {
+    // In the new flow, clicking a location just selects it
+    dispatch({ type: 'SELECT_LOCATION', payload: locationId })
   }
 
   const handleClaimAmountChange = (amount: number) => {
@@ -249,23 +248,35 @@ const DeadwoodGame: React.FC = () => {
   const isActionAvailable = (action: ActionType): boolean => {
     const current = currentPlayer
     if (!current) return false
+    
     switch (action) {
-      case ActionType.MOVE:
-        return true
+      case ActionType.MOVE: {
+        // Move is available if a location is selected and it's not the current location
+        if (gameState.selectedLocation === undefined) return false
+        if (gameState.selectedLocation === current.position) return false
+        const moveCost = getMoveCost(current, current.position, gameState.selectedLocation)
+        return current.gold >= moveCost
+      }
       case ActionType.CLAIM: {
+        // Claim is only available at current location
         const location = getLocationSafe(gameState.board, current.position)
         if (!location) return false
         const currentInfluence = getLocationInfluence(location, current.id)
         const hasSpace = currentInfluence < location.maxInfluence
         const hasGold = current.gold >= 1
-
         return hasSpace && hasGold
       }
       case ActionType.CHALLENGE: {
+        // Challenge is available if a location is selected with valid targets
+        if (gameState.selectedLocation === undefined) return false
         const cost = getChallengeCost(current)
         if (current.gold < cost) return false
-        const hasValidTargets = gameState.players.some((p, i) => {
-          if (i === gameState.currentPlayer) return false
+        
+        const playersAtLocation = gameState.players.filter(
+          (p) => p.position === gameState.selectedLocation
+        )
+        const hasValidTargets = playersAtLocation.some((p) => {
+          if (p.id === current.id) return false
           if (!canChallenge(current, p)) return false
           const location = getLocationSafe(gameState.board, p.position)
           if (!location) return false
@@ -307,510 +318,399 @@ const DeadwoodGame: React.FC = () => {
     !gameState.pendingAction
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #8B4513, #A0522D)',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      <div
-        style={{
-          background: '#654321',
-          color: 'white',
-          padding: '0.75rem',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-        }}
-      >
-        <div
-          style={{
-            fontSize: '1.1rem',
-            fontWeight: 'bold',
-            textAlign: 'center',
-          }}
-        >
-          {gameState.message}
+    <div className="min-h-screen h-screen bg-gradient-to-br from-deadwood-brown to-deadwood-sienna flex flex-col overflow-hidden">
+      {/* Game Header */}
+      <div className="bg-deadwood-dark-brown text-white py-3 px-4 shadow-lg">
+        <div className="text-center text-lg md:text-xl font-bold">
+          {gameState.pendingAction?.type === ActionType.MOVE && gameState.pendingAction.target === undefined
+            ? 'Select a location to move to'
+            : gameState.pendingAction?.type === ActionType.CHALLENGE && gameState.pendingAction.target === undefined
+            ? 'Select a player to challenge'
+            : gameState.selectedLocation === undefined && !gameState.pendingAction && isHumanTurn
+            ? 'Click a location to see available actions'
+            : gameState.message}
         </div>
-        <div
-          style={{
-            fontSize: '0.9rem',
-            textAlign: 'center',
-            opacity: 0.8,
-            marginTop: '0.25rem',
-          }}
-        >
+        <div className="text-center text-sm md:text-base opacity-80 mt-1">
           Round {gameState.roundCount} of 20 • Player{' '}
           {gameState.currentPlayer + 1} of {gameState.players.length}
         </div>
       </div>
-      <div
-        style={{
-          flex: 1,
-          overflow: 'auto',
-          padding: '1rem',
-          paddingBottom: isHumanTurn ? '200px' : '1rem',
-        }}
-      >
-        <div
-          style={{
-            background: '#F5DEB3',
-            borderRadius: '8px',
-            padding: '1rem',
-            marginBottom: '1rem',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-            border: `3px solid ${currentPlayer?.color}`,
-          }}
-          data-testid="current-player"
-        >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '0.5rem',
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  fontWeight: 'bold',
-                  fontSize: '1.1rem',
-                  color: '#654321',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                }}
-              >
-                <span
-                  data-testid="current-player-star"
-                  style={{ color: currentPlayer?.color }}
-                >
-                  ★
-                </span>
-                {currentPlayer?.name} - {currentPlayer?.character.name}
-              </div>
-              <div
-                style={{
-                  fontSize: '0.8rem',
-                  color: '#8B4513',
-                  fontStyle: 'italic',
-                }}
-              >
-                {currentPlayer?.character.ability}
-              </div>
-            </div>
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              gap: '1rem',
-              fontSize: '0.9rem',
-              color: '#654321',
-            }}
-          >
-            <div>
-              Gold: <strong>{currentPlayer?.gold}</strong>
-            </div>
-            <div>
-              Influence: <strong>{currentPlayer?.totalInfluence}</strong>
-            </div>
-            <div>
-              Actions: <strong>{2 - gameState.completedActions.length}</strong>
-            </div>
-          </div>
-        </div>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '0.75rem',
-            marginBottom: '1rem',
-          }}
-        >
-          {gameState.board.map((location) => {
-            const playersAtLocation = gameState.players.filter(
-              (p) => p.position === location.id
-            )
-            const isCurrentLocation = currentPlayer?.position === location.id
-            let isValidTarget = false
-            let moveCost: number | undefined
-            if (
-              gameState.pendingAction?.type === ActionType.MOVE &&
-              currentPlayer
-            ) {
-              isValidTarget = location.id !== currentPlayer.position
-              moveCost = getMoveCost(
-                currentPlayer,
-                currentPlayer.position,
-                location.id
-              )
-              if (moveCost > currentPlayer.gold) isValidTarget = false
-            } else if (
-              gameState.pendingAction?.type === ActionType.CHALLENGE &&
-              currentPlayer
-            ) {
-              const hasValidTargets = playersAtLocation.some((p) =>
-                validChallengeTargets.includes(p.id)
-              )
-              isValidTarget = hasValidTargets
-            }
-            return (
-              <LocationCard
-                key={location.id}
-                location={location}
-                players={playersAtLocation}
-                allPlayers={gameState.players}
-                onClick={() => handleLocationClick(location.id)}
-                isValidTarget={isValidTarget}
-                currentPlayerId={currentPlayer?.id || ''}
-                showMoveCost={moveCost}
-                isCurrentLocation={isCurrentLocation}
-                highlightedPlayers={
-                  gameState.pendingAction?.type === ActionType.CHALLENGE
-                    ? validChallengeTargets
-                    : []
-                }
-              />
-            )
-          })}
-        </div>
-        <div
-          style={{
-            background: 'rgba(245, 222, 179, 0.7)',
-            borderRadius: '8px',
-            padding: '0.75rem',
-          }}
-        >
-          <h3
-            style={{
-              margin: '0 0 0.5rem 0',
-              color: '#654321',
-              fontSize: '1rem',
-            }}
-          >
-            Other Players
-          </h3>
-          {gameState.players
-            .filter((p) => p.id !== currentPlayer?.id)
-            .map((player) => (
-              <div
-                key={player.id}
-                style={{
-                  fontSize: '0.8rem',
-                  marginBottom: '0.5rem',
-                  padding: '0.5rem',
-                  background: 'rgba(255, 255, 255, 0.5)',
-                  borderRadius: '4px',
-                  border: `2px solid ${player.color}`,
-                }}
-                data-testid={`other-player-${player.id}`}
-              >
-                <div
-                  style={{
-                    fontWeight: 'bold',
-                    marginBottom: '0.25rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem',
-                  }}
-                >
-                  <span
-                    data-testid="player-star"
-                    style={{ color: player.color }}
-                  >
-                    ★
-                  </span>
-                  {player.name} - {player.character.name}
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '0.75rem',
-                    fontSize: '0.75rem',
-                  }}
-                >
-                  <span>Gold: {player.gold}</span>
-                  <span>Influence: {player.totalInfluence}</span>
-                  <span>Location: {LOCATIONS[player.position].name}</span>
-                </div>
-              </div>
-            ))}
-        </div>
-      </div>
-      {isHumanTurn && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: '#F5DEB3',
-            borderTop: '3px solid #8B4513',
-            padding: '1rem',
-            boxShadow: '0 -2px 8px rgba(0,0,0,0.3)',
-          }}
-        >
-          {gameState.pendingAction && (
-            <div style={{ marginBottom: '1rem' }}>
-              {gameState.pendingAction.type === ActionType.CLAIM && (
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '0.5rem',
-                    marginBottom: '0.75rem',
-                    alignItems: 'center',
-                  }}
-                >
-                  <label
-                    style={{ flex: 1, fontSize: '0.9rem', color: '#654321' }}
-                  >
-                    Claim amount:
-                  </label>
-                  <select
-                    value={gameState.pendingAction.amount || 1}
-                    onChange={(e) =>
-                      handleClaimAmountChange(Number(e.target.value))
-                    }
-                    style={{
-                      flex: 2,
-                      padding: '0.5rem',
-                      borderRadius: '4px',
-                      border: '2px solid #8B4513',
-                      background: '#FFF8DC',
-                    }}
-                  >
-                    {[1, 2, 3].map((amt) => {
-                      const location = getLocationSafe(
-                        gameState.board,
-                        currentPlayer!.position
-                      )
-                      if (!location) return null
-                      const currentInf = getLocationInfluence(
-                        location,
-                        currentPlayer!.id
-                      )
-                      const maxSpace = location.maxInfluence - currentInf
-                      const maxAffordable = currentPlayer!.gold
-                      const maxClaim = Math.min(maxAffordable, maxSpace)
 
-                      if (amt > maxClaim) {
-                        return (
-                          <option
-                            key={amt}
-                            value={amt}
-                            disabled={true}
-                            style={{ color: '#999' }}
-                          >
-                            {amt} Gold (Not available)
-                          </option>
-                        )
+      {/* Main Game Grid */}
+      <div className="flex-1 overflow-auto" style={{ paddingBottom: isHumanTurn ? '250px' : '1rem' }}>
+        <div className="p-4 lg:p-6 xl:p-8 max-w-[2400px] mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] xl:grid-cols-[350px_1fr_350px] 2xl:grid-cols-[400px_1fr_400px] 3xl:grid-cols-[minmax(400px,500px)_1fr_minmax(400px,500px)] gap-4 lg:gap-6">
+            
+            {/* Current Player Info */}
+            <div 
+              className="bg-deadwood-tan rounded-lg p-4 shadow-lg border-4 relative overflow-hidden"
+              style={{ borderColor: currentPlayer?.color || '#ffd700' }}
+              data-testid="current-player"
+            >
+              {/* Player color overlay */}
+              <div 
+                className="absolute inset-0 opacity-20 pointer-events-none"
+                style={{ backgroundColor: currentPlayer?.color }}
+              ></div>
+              <div className="relative z-10">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <div className="font-bold text-lg flex items-center gap-1 text-deadwood-dark-brown">
+                    <span
+                      data-testid="current-player-star"
+                      style={{ color: currentPlayer?.color }}
+                    >
+                      ★
+                    </span>
+                    {currentPlayer?.name} - {currentPlayer?.character.name}
+                  </div>
+                  <div className="text-sm italic text-deadwood-brown">
+                    {currentPlayer?.character.ability}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-4 text-deadwood-dark-brown">
+                <div>Gold: <strong>{currentPlayer?.gold}</strong></div>
+                <div>Influence: <strong>{currentPlayer?.totalInfluence}</strong></div>
+                <div>Actions: <strong>{2 - gameState.completedActions.length}</strong></div>
+              </div>
+              </div>
+            </div>
+
+            {/* Game Board */}
+            <div className="lg:row-span-2">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
+                {gameState.board.map((location) => {
+                  const playersAtLocation = gameState.players.filter(
+                    (p) => p.position === location.id
+                  )
+                  const isCurrentLocation = currentPlayer?.position === location.id
+                  // In the new flow, all locations are clickable
+                  const isValidTarget = true
+                  // Only show move cost when in move selection mode
+                  const moveCost = currentPlayer && 
+                    location.id !== currentPlayer.position &&
+                    gameState.pendingAction?.type === ActionType.MOVE
+                    ? getMoveCost(currentPlayer, currentPlayer.position, location.id)
+                    : undefined
+                  return (
+                    <LocationCard
+                      key={location.id}
+                      location={location}
+                      players={playersAtLocation}
+                      allPlayers={gameState.players}
+                      onClick={() => handleLocationClick(location.id)}
+                      isValidTarget={isValidTarget}
+                      currentPlayerId={currentPlayer?.id || ''}
+                      showMoveCost={moveCost}
+                      isCurrentLocation={isCurrentLocation}
+                      highlightedPlayers={
+                        gameState.pendingAction?.type === ActionType.CHALLENGE
+                          ? validChallengeTargets
+                          : []
                       }
-
-                      return (
-                        <option key={amt} value={amt}>
-                          {amt} Gold = {amt} Influence
-                        </option>
-                      )
-                    })}
-                  </select>
-                </div>
-              )}
-              {gameState.pendingAction.type === ActionType.CLAIM &&
-                (() => {
-                  const validation = getClaimValidation()
-                  if (!validation?.valid) {
-                    return (
-                      <div
-                        style={{
-                          color: '#DC143C',
-                          fontSize: '0.8rem',
-                          marginTop: '0.5rem',
-                        }}
-                      >
-                        {validation?.message}
-                      </div>
-                    )
-                  }
-                  return null
-                })()}
-              {gameState.challengeTargets && (
-                <div style={{ marginBottom: '1rem' }}>
-                  <div
-                    style={{
-                      marginBottom: '0.5rem',
-                      fontSize: '0.9rem',
-                      color: '#654321',
-                    }}
-                  >
-                    Select target to challenge:
-                  </div>
-                  {gameState.challengeTargets.map((target) => {
-                    const player = gameState.players.find(
-                      (p) => p.id === target.playerId
-                    )!
-                    return (
-                      <button
-                        key={target.playerId}
-                        onClick={() =>
-                          dispatch({
-                            type: 'SELECT_CHALLENGE_TARGET',
-                            payload: target.playerIndex,
-                          })
-                        }
-                        style={{
-                          width: '100%',
-                          padding: '0.5rem',
-                          marginBottom: '0.25rem',
-                          background: '#8B4513',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {player.name} - {player.character.name} (
-                        {getLocationInfluence(
-                          gameState.board[player.position],
-                          player.id
-                        )}{' '}
-                        influence)
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button
-                  onClick={() => dispatch({ type: 'CANCEL_ACTION' })}
-                  style={{
-                    flex: 1,
-                    padding: '0.75rem',
-                    background: '#DC143C',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => dispatch({ type: 'CONFIRM_ACTION' })}
-                  disabled={
-                    (gameState.pendingAction.type === ActionType.MOVE &&
-                      gameState.pendingAction.target === undefined) ||
-                    (gameState.pendingAction.type === ActionType.CHALLENGE &&
-                      gameState.pendingAction.target === undefined) ||
-                    (gameState.pendingAction.type === ActionType.CLAIM &&
-                      !getClaimValidation()?.valid)
-                  }
-                  style={{
-                    flex: 2,
-                    padding: '0.75rem',
-                    background:
-                      gameState.pendingAction.target !== undefined ||
-                      gameState.pendingAction.type === ActionType.CLAIM
-                        ? '#32CD32'
-                        : '#D3D3D3',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontWeight: 'bold',
-                    cursor:
-                      gameState.pendingAction.target !== undefined ||
-                      gameState.pendingAction.type === ActionType.CLAIM
-                        ? 'pointer'
-                        : 'not-allowed',
-                  }}
-                >
-                  Confirm {gameState.pendingAction.type}
-                </button>
+                      isSelected={gameState.selectedLocation === location.id}
+                      currentPlayerColor={currentPlayer?.color}
+                    />
+                  )
+                })}
               </div>
             </div>
-          )}
-          <>
-            <div
-              style={{
-                display: 'flex',
-                gap: '0.5rem',
-                marginBottom: '0.5rem',
-              }}
-            >
-              <ActionButton
-                action={ActionType.MOVE}
-                isSelected={gameState.completedActions.some(
-                  (a) => a.type === ActionType.MOVE
-                )}
-                isDisabled={
-                  !canSelectActions || !isActionAvailable(ActionType.MOVE)
-                }
-                onClick={() => handleActionSelect(ActionType.MOVE)}
-                cost={currentPlayer?.character.id === 'jane' ? 0 : undefined}
-              />
-              <ActionButton
-                action={ActionType.CLAIM}
-                isSelected={gameState.completedActions.some(
-                  (a) => a.type === ActionType.CLAIM
-                )}
-                isDisabled={
-                  !canSelectActions || !isActionAvailable(ActionType.CLAIM)
-                }
-                onClick={() => handleActionSelect(ActionType.CLAIM)}
-                cost={1}
-              />
-              <ActionButton
-                action={ActionType.CHALLENGE}
-                isSelected={gameState.completedActions.some(
-                  (a) => a.type === ActionType.CHALLENGE
-                )}
-                isDisabled={
-                  !canSelectActions || !isActionAvailable(ActionType.CHALLENGE)
-                }
-                onClick={() => handleActionSelect(ActionType.CHALLENGE)}
-                cost={getChallengeCost(currentPlayer)}
-              />
-              <ActionButton
-                action={ActionType.REST}
-                isSelected={gameState.completedActions.some(
-                  (a) => a.type === ActionType.REST
-                )}
-                isDisabled={!canSelectActions}
-                onClick={() => handleActionSelect(ActionType.REST)}
-              />
+
+            {/* Other Players Section - Hidden on mobile, shown on large screens */}
+            <div className="lg:block hidden">
+              <div className="bg-deadwood-tan/70 lg:bg-deadwood-tan rounded-lg p-4 shadow-lg 2xl:sticky 2xl:top-6 2xl:max-h-[calc(100vh-8rem)] 2xl:overflow-y-auto">
+                <h3 className="text-lg font-bold mb-3 text-deadwood-dark-brown">
+                  Other Players
+                </h3>
+                {gameState.players
+                  .filter((p) => p.id !== currentPlayer?.id)
+                  .map((player) => (
+                    <div
+                      key={player.id}
+                      className="mb-3 p-3 bg-white/50 rounded border-2 transition-all hover:bg-white/70"
+                      style={{ borderColor: player.color }}
+                      data-testid={`other-player-${player.id}`}
+                    >
+                      <div className="font-bold mb-1 flex items-center gap-1">
+                        <span
+                          data-testid="player-star"
+                          style={{ color: player.color }}
+                        >
+                          ★
+                        </span>
+                        {player.name} - {player.character.name}
+                      </div>
+                      <div className="text-sm flex gap-3">
+                        <span>Gold: {player.gold}</span>
+                        <span>Influence: {player.totalInfluence}</span>
+                        <span>Location: {LOCATIONS[player.position].name}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
             </div>
-            <div
-              style={{
-                fontSize: '0.8rem',
-                textAlign: 'center',
-                color: '#8B4513',
-              }}
-            >
-              {`Selected: ${gameState.completedActions.length}/2 actions`}
-            </div>
-            {gameState.actionLog && (
-              <div
-                tabIndex={-1}
-                style={{
-                  maxHeight: '100px',
-                  overflowY: 'auto',
-                  marginTop: '0.5rem',
-                  fontSize: '0.75rem',
-                  background: '#FFF8DC',
-                  color: '#654321',
-                  border: '1px solid #8B4513',
-                  padding: '0.5rem',
-                }}
-              >
-                {gameState.actionLog.map((entry, i) => (
-                  <div key={i} style={{ marginBottom: '0.25rem' }}>
-                    {entry}
+
+            {/* Action History - Shows on XL+ screens */}
+            {gameState.actionLog && gameState.actionLog.length > 0 && (
+              <div className="hidden xl:block lg:col-start-3">
+                <div className="bg-deadwood-light-tan text-deadwood-dark-brown border border-deadwood-brown p-3 rounded-lg shadow-lg 2xl:sticky 2xl:top-6 2xl:max-h-[calc(100vh-8rem)] 2xl:overflow-y-auto">
+                  <h3 className="font-bold mb-2">Action History</h3>
+                  <div className="text-sm space-y-1">
+                    {gameState.actionLog.map((entry, i) => (
+                      <div key={i} className="pb-1 border-b border-deadwood-brown/20 last:border-0">
+                        {entry}
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             )}
-          </>
+
+            {/* Mobile Other Players - Shows below board on mobile */}
+            <div className="lg:hidden">
+              <div className="bg-deadwood-tan/70 rounded-lg p-4 shadow-lg">
+                <h3 className="text-lg font-bold mb-3 text-deadwood-dark-brown">
+                  Other Players
+                </h3>
+                {gameState.players
+                  .filter((p) => p.id !== currentPlayer?.id)
+                  .map((player) => (
+                    <div
+                      key={player.id}
+                      className="mb-3 p-3 bg-white/50 rounded border-2"
+                      style={{ borderColor: player.color }}
+                      data-testid={`other-player-${player.id}`}
+                    >
+                      <div className="font-bold mb-1 flex items-center gap-1">
+                        <span 
+                          data-testid="player-star"
+                          style={{ color: player.color }}
+                        >
+                          ★
+                        </span>
+                        {player.name} - {player.character.name}
+                      </div>
+                      <div className="text-sm flex gap-3">
+                        <span>Gold: {player.gold}</span>
+                        <span>Influence: {player.totalInfluence}</span>
+                        <span>Location: {LOCATIONS[player.position].name}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Mobile Action History */}
+            {gameState.actionLog && gameState.actionLog.length > 0 && (
+              <div className="xl:hidden">
+                <div className="bg-deadwood-light-tan text-deadwood-dark-brown border border-deadwood-brown p-3 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                  <h3 className="font-bold mb-2">Action History</h3>
+                  <div className="text-sm space-y-1">
+                    {gameState.actionLog.map((entry, i) => (
+                      <div key={i} className="pb-1 border-b border-deadwood-brown/20 last:border-0">
+                        {entry}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Move Confirmation Modal */}
+      {gameState.pendingAction?.type === ActionType.MOVE && gameState.pendingAction.target !== undefined && isHumanTurn && (
+        <ConfirmModal
+          isOpen={true}
+          title="Confirm Move"
+          message={(() => {
+            const cost = getMoveCost(
+              currentPlayer!,
+              currentPlayer!.position,
+              gameState.pendingAction.target
+            );
+            const locationName = LOCATIONS[gameState.pendingAction.target].name;
+            console.log('Move cost calculation:', {
+              from: currentPlayer!.position,
+              fromName: LOCATIONS[currentPlayer!.position].name,
+              to: gameState.pendingAction.target,
+              toName: locationName,
+              cost: cost,
+              character: currentPlayer!.character.name
+            });
+            return cost > 0 
+              ? `Move to ${locationName} for ${cost} gold?`
+              : `Move to ${locationName}? (Free - Adjacent location)`;
+          })()}
+          confirmText="Confirm Move"
+          onConfirm={() => dispatch({ type: 'CONFIRM_ACTION' })}
+          onCancel={() => dispatch({ type: 'CANCEL_ACTION' })}
+          disabled={false}
+        />
+      )}
+
+      {/* Claim Confirmation Modal */}
+      {gameState.pendingAction?.type === ActionType.CLAIM && isHumanTurn && (
+        <ConfirmModal
+          isOpen={true}
+          title="Confirm Claim"
+          confirmText="Confirm Claim"
+          onConfirm={() => dispatch({ type: 'CONFIRM_ACTION' })}
+          onCancel={() => dispatch({ type: 'CANCEL_ACTION' })}
+          disabled={!getClaimValidation()?.valid}
+        >
+          <div className="mb-4">
+            <label className="block text-deadwood-dark-brown font-bold mb-2">
+              Claim amount:
+            </label>
+            <select
+              className="w-full px-3 py-2 rounded border-2 border-deadwood-brown bg-deadwood-light-tan"
+              value={gameState.pendingAction.amount || 1}
+              onChange={(e) => handleClaimAmountChange(Number(e.target.value))}
+            >
+              {[1, 2, 3].map((amt) => {
+                const location = getLocationSafe(gameState.board, currentPlayer!.position)
+                if (!location) return null
+                const currentInf = getLocationInfluence(location, currentPlayer!.id)
+                const maxSpace = location.maxInfluence - currentInf
+                const maxAffordable = currentPlayer!.gold
+                const maxClaim = Math.min(maxAffordable, maxSpace)
+
+                if (amt > maxClaim) {
+                  return (
+                    <option key={amt} value={amt} disabled={true} className="text-gray-500">
+                      {amt} Gold (Not available)
+                    </option>
+                  )
+                }
+                return (
+                  <option key={amt} value={amt}>
+                    {amt} Gold
+                  </option>
+                )
+              })}
+            </select>
+            {(() => {
+              const validation = getClaimValidation()
+              if (!validation?.valid) {
+                return (
+                  <div className="text-deadwood-red text-sm mt-2">
+                    {validation?.message}
+                  </div>
+                )
+              }
+              return null
+            })()}
+          </div>
+        </ConfirmModal>
+      )}
+
+      {/* Challenge Confirmation Modal */}
+      {gameState.pendingAction?.type === ActionType.CHALLENGE && gameState.challengeTargets && gameState.challengeTargets.length > 0 && isHumanTurn && (
+        <ConfirmModal
+          isOpen={true}
+          title="Select Target to Challenge"
+          confirmText="Confirm Challenge"
+          onConfirm={() => dispatch({ type: 'CONFIRM_ACTION' })}
+          onCancel={() => dispatch({ type: 'CANCEL_ACTION' })}
+          disabled={gameState.pendingAction.target === undefined}
+        >
+          <div className="mb-4">
+            <div className="mb-3 text-deadwood-dark-brown">
+              Select which player to challenge at this location:
+            </div>
+            {gameState.challengeTargets.map((target) => {
+              const player = gameState.players.find((p) => p.id === target.playerId)!
+              const isSelected = gameState.pendingAction.target === target.playerIndex
+              return (
+                <button
+                  key={target.playerId}
+                  className={`w-full p-3 mb-2 rounded transition-all ${
+                    isSelected 
+                      ? 'ring-4 ring-opacity-50 scale-105' 
+                      : 'hover:bg-deadwood-sienna'
+                  } ${isSelected ? 'bg-deadwood-gold text-deadwood-dark-brown' : 'bg-deadwood-brown text-white'}`}
+                  style={isSelected && currentPlayer?.color ? { 
+                    backgroundColor: currentPlayer.color,
+                    color: 'white',
+                    boxShadow: `0 0 0 4px ${currentPlayer.color}33`
+                  } : undefined}
+                  onClick={() =>
+                    dispatch({
+                      type: 'SELECT_CHALLENGE_TARGET',
+                      payload: target.playerIndex,
+                    })
+                  }
+                >
+                  {player.name} - {player.character.name}
+                  <div className="text-sm mt-1">
+                    Influence: {getLocationInfluence(gameState.board[player.position], player.id)}
+                  </div>
+                </button>
+              )
+            })}
+            {gameState.pendingAction.target !== undefined && (
+              <div className="text-sm mt-3 text-deadwood-brown">
+                Challenge cost: {getChallengeCost(currentPlayer!)} gold
+              </div>
+            )}
+          </div>
+        </ConfirmModal>
+      )}
+
+      {/* Actions Panel */}
+      {isHumanTurn && (
+        <div className="fixed bottom-0 left-0 right-0 bg-deadwood-tan border-t-4 border-deadwood-brown p-4 shadow-2xl z-50">
+          <div className="max-w-[2400px] mx-auto">
+            <div className="flex gap-2 mb-2 max-w-4xl mx-auto">
+                <ActionButton
+                  action={ActionType.MOVE}
+                  isSelected={gameState.completedActions.some(
+                    (a) => a.type === ActionType.MOVE
+                  )}
+                  isDisabled={
+                    !canSelectActions || !isActionAvailable(ActionType.MOVE)
+                  }
+                  onClick={() => handleActionSelect(ActionType.MOVE)}
+                  cost={currentPlayer?.character.id === 'jane' ? 0 : undefined}
+                />
+                <ActionButton
+                  action={ActionType.CLAIM}
+                  isSelected={gameState.completedActions.some(
+                    (a) => a.type === ActionType.CLAIM
+                  )}
+                  isDisabled={
+                    !canSelectActions || !isActionAvailable(ActionType.CLAIM)
+                  }
+                  onClick={() => handleActionSelect(ActionType.CLAIM)}
+                  cost={1}
+                />
+                <ActionButton
+                  action={ActionType.CHALLENGE}
+                  isSelected={gameState.completedActions.some(
+                    (a) => a.type === ActionType.CHALLENGE
+                  )}
+                  isDisabled={
+                    !canSelectActions || !isActionAvailable(ActionType.CHALLENGE)
+                  }
+                  onClick={() => handleActionSelect(ActionType.CHALLENGE)}
+                  cost={getChallengeCost(currentPlayer)}
+                />
+                <ActionButton
+                  action={ActionType.REST}
+                  isSelected={gameState.completedActions.some(
+                    (a) => a.type === ActionType.REST
+                  )}
+                  isDisabled={!canSelectActions}
+                  onClick={() => handleActionSelect(ActionType.REST)}
+                />
+              </div>
+              <div className="text-center text-sm text-deadwood-brown">
+                {`Selected: ${gameState.completedActions.length}/2 actions`}
+              </div>
+          </div>
         </div>
       )}
     </div>
