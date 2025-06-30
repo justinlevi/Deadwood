@@ -114,7 +114,15 @@
   location
 - What's next: run full test suite and ensure build succeeds
 
-### [2025-06-30 12:02 UTC] Fix player color display bug
-- Removed conditional influence star styling overriding player colors
-- Verified lint, tests, and build all succeed
-- What's next: monitor UI to ensure colors remain consistent
+
+### [2025-06-30 14:45 UTC] Analysis of test patterns for AI turn checking
+
+- Analyzed all test files for patterns using 'text=Al' or similar that might be checking for AI turns
+- Found that all instances of 'text=Al' are correctly looking for the character "Al Swearengen", not AI turns
+- Specific findings:
+  - `al_ability.spec.ts` line 57: Correctly finds player named "Al" to test character ability
+  - `complete_gameplay.spec.ts` lines 379-381: Correctly finds player named "Al" to check gold after ability triggers
+  - `complete_gameplay.spec.ts` line 945: Already correctly uses 'text=Your turn' to verify return to human player
+- Tests properly use 'text=AI Player' or 'text=/AI Player.*turn/' for actual AI turn checking
+- No updates needed as all patterns are used appropriately
+- What's next: None - all test patterns are correctly implemented

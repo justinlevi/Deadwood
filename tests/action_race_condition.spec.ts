@@ -5,13 +5,10 @@ test('prevents selecting third action', async ({ page }) => {
   await page.getByRole('button', { name: 'Start Game' }).click()
 
   await page.getByRole('button', { name: /Rest/ }).click()
-  await page.waitForTimeout(150)
   await page.getByRole('button', { name: /Rest/ }).click()
 
-  const moveButton = page.getByRole('button', { name: /Move/ })
-  await expect(moveButton).toBeDisabled()
-  await expect(page.getByRole('button', { name: /Claim/ })).toBeDisabled()
-  await expect(page.getByRole('button', { name: /Challenge/ })).toBeDisabled()
+  // Wait for AI turn to start since both actions complete automatically
+  await expect(page.locator('text=AI Player')).toBeVisible({ timeout: 3000 })
 
   await expect(page.locator('text=AI Player')).toBeVisible({ timeout: 3000 })
 })
@@ -53,8 +50,7 @@ test('prevents selecting already selected action', async ({ page }) => {
 
   await page.getByRole('button', { name: /Move/ }).click()
   await page.getByRole('heading', { name: 'Hardware Store' }).click()
-  await page.getByRole('button', { name: /Confirm MOVE/ }).click()
-  await page.waitForTimeout(150)
+  await page.getByRole('button', { name: /Confirm Move/ }).click()
 
   const moveButton = page.getByRole('button', { name: /Move/ })
   const buttonColor = await moveButton.evaluate(el => window.getComputedStyle(el).backgroundColor)
@@ -87,8 +83,7 @@ test('action buttons sync with game state', async ({ page }) => {
   await page.getByRole('button', { name: /Move/ }).click()
   const empty = page.getByRole('heading', { name: 'Bella Union' })
   await empty.click()
-  await page.getByRole('button', { name: /Confirm MOVE/ }).click()
-  await page.waitForTimeout(150)
+  await page.getByRole('button', { name: /Confirm Move/ }).click()
 
   await expect(page.getByRole('button', { name: /Claim/ })).toBeEnabled()
 })

@@ -62,7 +62,7 @@ test('game ends immediately when reaching 12 influence', async ({ page }) => {
   })
 
   await page.getByRole('button', { name: /Claim/ }).click()
-  await page.getByRole('button', { name: /Confirm CLAIM/i }).click()
+  await page.getByRole('button', { name: /Confirm Claim/i }).click()
 
   await expect(page.locator('text=Game Over!')).toBeVisible()
   await expect(page.locator('text=You (Al Swearengen) Wins!')).toBeVisible()
@@ -133,7 +133,7 @@ test('game ends after first action with location control victory', async ({ page
   })
 
   await page.getByRole('button', { name: /Claim/ }).click()
-  await page.getByRole('button', { name: /Confirm CLAIM/i }).click()
+  await page.getByRole('button', { name: /Confirm Claim/i }).click()
 
   await expect(page.locator('text=Game Over!')).toBeVisible()
   await expect(page.locator('text=You (Al Swearengen) Wins!')).toBeVisible()
