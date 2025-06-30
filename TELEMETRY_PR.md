@@ -1,6 +1,7 @@
 # Incremental Supabase Telemetry Implementation
 
 ## Summary
+
 - ✅ Step 1: Environment configuration - Added Supabase URL and anon key to .env files
 - ✅ Step 2: Database schema - Created migration for game_logs table with RLS policies
 - ✅ Step 3: Dependencies - Installed @supabase/supabase-js client library
@@ -10,6 +11,7 @@
 - ✅ Step 7: Data retention - Created Supabase Edge Function for automated log cleanup
 
 ## Telemetry Events Captured
+
 - `game_started` - When a new game begins (includes player count, AI difficulty, character selections)
 - `move` - Player movement actions (from/to positions, cost, AI flag)
 - `claim` - Influence claim actions (location, amount claimed, requested amount)
@@ -18,6 +20,7 @@
 - `game_over` - When game ends (winner, final scores for all players)
 
 ## Features Implemented
+
 1. **Session Management** - Unique session ID per browser tab stored in sessionStorage
 2. **Offline Support** - Events are buffered when offline and sent when connection restored
 3. **Batch Sending** - Events are batched every 5 seconds to reduce API calls
@@ -26,9 +29,11 @@
 6. **Data Retention** - Edge Function to automatically delete logs older than 3 days
 
 ## Testing
+
 All unit tests pass. The telemetry system gracefully handles test environments where Supabase is not configured.
 
 ## Deployment Steps
+
 1. Apply the migration file to the Supabase project:
    ```bash
    supabase db push
@@ -41,6 +46,7 @@ All unit tests pass. The telemetry system gracefully handles test environments w
 4. Ensure .env file with actual anon key is configured (not committed)
 
 ## Implementation Details
+
 - Events use NDJSON format (one JSON object per line)
 - Fire-and-forget pattern ensures gameplay is never blocked
 - Test environment automatically skips telemetry to avoid test pollution
