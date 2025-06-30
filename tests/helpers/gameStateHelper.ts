@@ -97,7 +97,10 @@ export const TestStates = {
   // Player can challenge opponent who has influence
   readyToChallenge: (): GameState => {
     const state = createDefaultGameState()
+    // Both players at same location (Gem Saloon)
+    state.players[1].position = 0
     state.board[0].influences['player-1'] = 2
+    state.players[1].totalInfluence = 2
     state.players[0].gold = 3
     return state
   },

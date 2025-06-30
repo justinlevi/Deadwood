@@ -27,16 +27,18 @@ test('game ends immediately at round 20', async ({ page }) => {
 
 test('round advances after all players complete turns', async ({ page }) => {
   const state = createDefaultGameState()
-  state.currentPlayer = 1 // Start with AI player
-  state.players[1].isAI = false // Make second player human for testing
-  state.players[0].isAI = true // Make first player AI
-  state.message = "Round 1 • Your turn"
+  // Set up so completing current turn will advance round
+  state.currentPlayer = 1 // Player 2 (last player)
+  state.roundCount = 1
   await startGameWithState(page, state)
 
-  // Complete turn as player 2
+  // Complete turn as last player
   await page.getByRole('button', { name: /Rest/ }).click()
   await page.getByRole('button', { name: /Rest/ }).click()
 
+  // Wait for round to advance
+  await page.waitForTimeout(500)
+
   // Should advance to round 2
-  await expect(page.locator('text=Round 2')).toBeVisible({ timeout: 2000 })
+  await expect(page.locator('text=/Round 2 of 20/')).toBeVisible()
 })

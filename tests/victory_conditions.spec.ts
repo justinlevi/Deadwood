@@ -14,9 +14,12 @@ test.describe('Victory Conditions - Focused Tests', () => {
     await page.locator('select').selectOption('1')
     await page.getByRole('button', { name: /Confirm claim/ }).click()
 
+    // Wait for game state to update
+    await page.waitForTimeout(500)
+
     // Should win immediately
     await expect(page.locator('text=Game Over!')).toBeVisible()
-    await expect(page.locator('text=/You.*Wins/i')).toBeVisible()
+    await expect(page.locator('text=/You.*[Ww]ins/i')).toBeVisible()
   })
 
   test('wins by controlling 3 locations at max', async ({ page }) => {
@@ -31,9 +34,12 @@ test.describe('Victory Conditions - Focused Tests', () => {
     await page.locator('select').selectOption('1')
     await page.getByRole('button', { name: /Confirm claim/ }).click()
 
+    // Wait for game state to update
+    await page.waitForTimeout(500)
+
     // Should win immediately
     await expect(page.locator('text=Game Over!')).toBeVisible()
-    await expect(page.locator('text=/You.*Wins/i')).toBeVisible()
+    await expect(page.locator('text=/You.*[Ww]ins/i')).toBeVisible()
   })
 
   test('game continues when victory not met', async ({ page }) => {
@@ -60,9 +66,12 @@ test.describe('Victory Conditions - Focused Tests', () => {
     await page.getByRole('button', { name: /Rest/ }).click()
     await page.getByRole('button', { name: /Rest/ }).click()
 
+    // Wait for game state to update
+    await page.waitForTimeout(500)
+
     // Should end game with player 1 winning
     await expect(page.locator('text=Game Over!')).toBeVisible()
-    await expect(page.locator('text=/You.*Wins/i')).toBeVisible()
+    await expect(page.locator('text=/You.*[Ww]ins/i')).toBeVisible()
   })
 
   test('handles tie at round 20', async ({ page }) => {
