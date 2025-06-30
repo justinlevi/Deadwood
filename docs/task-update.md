@@ -125,3 +125,10 @@
 - Tests properly use 'text=AI Player' or 'text=/AI Player.\*turn/' for actual AI turn checking
 - No updates needed as all patterns are used appropriately
 - What's next: None - all test patterns are correctly implemented
+
+### [2025-06-30 12:41 UTC] Added GitHub Actions badges
+
+- Inserted CI and Deploy badges into README
+- Ran npm ci, lint, test, and build
+- Formatted docs per Prettier
+- What's next: monitor CI badges

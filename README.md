@@ -1,4 +1,6 @@
 # Deadwood Showdown Board Game
+[![CI](https://github.com/your-org/deadwood/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/deadwood/actions/workflows/ci.yml) [![Deploy](https://github.com/your-org/deadwood/actions/workflows/deploy.yml/badge.svg)](https://github.com/your-org/deadwood/actions/workflows/deploy.yml)
+
 
 A strategic board game set in the HBO Deadwood universe, implemented as a React web application. Players compete for control of the infamous frontier town through influence, gold, and cunning strategy.
 
