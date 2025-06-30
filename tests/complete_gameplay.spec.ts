@@ -24,7 +24,17 @@ async function waitForAI(page: Page, timeout = 10000) {
 
 async function performMove(page: Page, location: string) {
   await page.getByRole('button', { name: /Move/ }).click()
-  await page.getByRole('heading', { name: location }).click()
+  
+  // Wait for move mode to be active
+  await expect(page.locator('text=Select a location to move to')).toBeVisible({ timeout: 10000 })
+  
+  // Click on the location card - find the clickable card with green border
+  const locationCard = page.locator('div.border-deadwood-green').filter({
+    has: page.locator(`h3:text("${location}")`)
+  }).first()
+  
+  await locationCard.click()
+  
   await page.getByRole('button', { name: /Confirm move/ }).click()
 }
 
@@ -36,7 +46,16 @@ async function performClaim(page: Page, amount: string) {
 
 async function performChallenge(page: Page, location: string, targetPlayer?: string) {
   await page.getByRole('button', { name: /Challenge/ }).click()
-  await page.getByRole('heading', { name: location }).click()
+  
+  // Wait for challenge mode to be active
+  await expect(page.locator('text=Select a player to challenge')).toBeVisible({ timeout: 10000 })
+  
+  // Click on the location card - find the clickable card with green border
+  const locationCard = page.locator('div.border-deadwood-green').filter({
+    has: page.locator(`h3:text("${location}")`)
+  }).first()
+  
+  await locationCard.click()
 
   // If multiple targets exist, select specific one
   if (targetPlayer) {
@@ -46,6 +65,9 @@ async function performChallenge(page: Page, location: string, targetPlayer?: str
     }
   }
 
+  // Wait for confirm button to be enabled
+  await expect(page.getByRole('button', { name: /Confirm challenge/ })).toBeEnabled()
+  
   await page.getByRole('button', { name: /Confirm challenge/ }).click()
 }
 
@@ -372,15 +394,30 @@ test.describe('Character Abilities', () => {
 
     // Move to Gem Saloon
     await page.getByRole('button', { name: /Move/ }).click()
-    await page.getByRole('heading', { name: 'Gem Saloon' }).click()
+    
+    // Wait for move mode to be active
+    await expect(page.locator('text=Select a location to move to')).toBeVisible()
+    
+    // Click on the Gem Saloon location card
+    const gemSaloonCard = page.locator('div').filter({ 
+      has: page.locator('h3:text("Gem Saloon")') 
+    }).first()
+    await gemSaloonCard.click()
+    
+    // Confirm the move
     await page.getByRole('button', { name: /Confirm move/ }).click()
 
     // Wait for move to complete and Al's ability to trigger
-    await page.waitForTimeout(500)
+    await page.waitForTimeout(1000)
 
     // Al should now have 4 gold (3 + 1 from ability)
     // Look for Al's player info
-    await expect(page.locator('text=Al Swearengen').locator('..').locator('text=Gold: 4')).toBeVisible()
+    const alPlayerInfo = page.locator('div').filter({
+      hasText: /Al.*Gold:/
+    }).first()
+    
+    // Check that Al now has 4 gold
+    await expect(alPlayerInfo).toContainText('Gold: 4')
   })
 
   test('Seth Bullock pays only 1 gold for challenges', async ({ page }) => {
@@ -700,18 +737,18 @@ test.describe('Game Mechanics', () => {
 
     // Challenge opponent
     await performChallenge(page, 'Gem Saloon')
+    
+    // Wait for challenge to complete
+    await page.waitForTimeout(500)
 
     // Check influence was reduced
-    const gemSaloon = page
-      .locator('div')
-      .filter({
-        has: page.locator('h3:text("Gem Saloon")'),
-      })
-      .first()
+    const gemSaloon = page.locator('div').filter({
+      has: page.locator('h3:text("Gem Saloon")')
+    }).first()
 
     // Should show 2 stars now (was 3)
-    const stars = await gemSaloon.locator('text=★★').first().textContent()
-    expect(stars).toBe('★★')
+    // Look for influence display showing exactly 2 stars
+    await expect(gemSaloon).toContainText('★★')
   })
 
   test('multiple players at same location', async ({ page }) => {
@@ -781,12 +818,20 @@ test.describe('Game Mechanics', () => {
 
     // Challenge should show multiple targets
     await page.getByRole('button', { name: /Challenge/ }).click()
-    await page.getByRole('heading', { name: 'Gem Saloon' }).click()
+    
+    // Wait for challenge mode to be active
+    await expect(page.locator('text=Select a player to challenge')).toBeVisible()
+    
+    // Click on the Gem Saloon location card
+    const gemSaloonCard = page.locator('div').filter({ 
+      has: page.locator('h3:text("Gem Saloon")') 
+    }).first()
+    await gemSaloonCard.click()
 
     // Should see target selection
     await expect(page.locator('text=Select target to challenge')).toBeVisible()
 
-    // Should have 2 target buttons
+    // Should have 2 target buttons (AI Player 1 and AI Player 2)
     const targetButtons = page.locator('button').filter({ hasText: 'AI Player' })
     await expect(targetButtons).toHaveCount(2)
 

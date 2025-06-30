@@ -1,11 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  /* Custom colors for Deadwood theme */
+  --color-deadwood-brown: #8B4513;
+  --color-deadwood-dark-brown: #654321;
+  --color-deadwood-tan: #F5DEB3;
+  --color-deadwood-light-tan: #FFF8DC;
+  --color-deadwood-sienna: #A0522D;
+  --color-deadwood-gold: #FFD700;
+  --color-deadwood-green: #32CD32;
+  --color-deadwood-red: #DC143C;
+  --color-deadwood-sand: #F4A460;
+  --color-deadwood-beige: #DEB887;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -24,8 +36,6 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -36,10 +46,10 @@ h1 {
 }
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
 }
 
 .logo {
@@ -82,15 +92,3 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}

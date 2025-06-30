@@ -30,15 +30,27 @@ test('round advances after all players complete turns', async ({ page }) => {
   // Set up so completing current turn will advance round
   state.currentPlayer = 1 // Player 2 (last player)
   state.roundCount = 1
+  // Make sure player 2 is human so we can control their actions
+  state.players[1].isAI = false
+  state.players[1].name = 'Player 2'
   await startGameWithState(page, state)
 
-  // Complete turn as last player
-  await page.getByRole('button', { name: /Rest/ }).click()
-  await page.getByRole('button', { name: /Rest/ }).click()
-
-  // Wait for round to advance
+  // Wait for buttons to be ready
   await page.waitForTimeout(500)
+  
+  // Complete turn as last player
+  const restButton = page.getByRole('button', { name: /Rest/ })
+  await expect(restButton).toBeEnabled({ timeout: 5000 })
+  await restButton.click()
+  
+  // Wait for first action to complete
+  await page.waitForTimeout(500)
+  await restButton.click()
 
-  // Should advance to round 2
+  // Wait for round to advance and turn to switch back to player 1
+  await page.waitForTimeout(1000)
+
+  // Should advance to round 2 and be player 1's turn
   await expect(page.locator('text=/Round 2 of 20/')).toBeVisible()
+  await expect(page.locator('text=Your turn').first()).toBeVisible()
 })

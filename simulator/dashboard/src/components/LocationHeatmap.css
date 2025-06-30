@@ -1,0 +1,105 @@
+.location-heatmap {
+  max-width: 1200px;
+}
+
+.heatmap-controls {
+  margin-bottom: 1rem;
+}
+
+.heatmap-controls label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.heatmap-controls select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.board-visualization {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.board-svg {
+  width: 100%;
+  height: auto;
+  max-width: 600px;
+  margin: 0 auto;
+  display: block;
+}
+
+.location-node {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.location-node:hover {
+  transform: scale(1.1);
+  filter: brightness(1.1);
+}
+
+.location-label {
+  font-size: 14px;
+  font-weight: 500;
+  fill: #2c3e50;
+}
+
+.location-value {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.location-stats h4 {
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+.location-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.location-card {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 4px;
+}
+
+.location-card h5 {
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+.location-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metric {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.metric-label {
+  color: #7f8c8d;
+}
+
+.metric-value {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #7f8c8d;
+}

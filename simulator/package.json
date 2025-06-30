@@ -1,0 +1,22 @@
+{
+  "name": "deadwood-simulator",
+  "version": "1.0.0",
+  "description": "Game simulator and analysis dashboard for Deadwood",
+  "type": "module",
+  "scripts": {
+    "simulate": "node simulate.cjs",
+    "quick": "node simulate.cjs quick",
+    "full": "node simulate.cjs full",
+    "verify": "node simulate.cjs verify",
+    "dev": "cd dashboard && npm run dev",
+    "build": "cd dashboard && npm run build",
+    "install-all": "npm install && cd dashboard && npm install"
+  },
+  "dependencies": {
+    "tsx": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.9",
+    "typescript": "~5.8.3"
+  }
+}

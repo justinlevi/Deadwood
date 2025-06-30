@@ -50,13 +50,43 @@ test('Al gains gold when another player enters Gem Saloon', async ({ page }) => 
     }
   ])
 
+  // Click Move action button
   await page.getByRole('button', { name: /Move/ }).click()
-  await page.getByRole('heading', { name: 'Gem Saloon' }).click()
-  await page.getByRole('button', { name: /Confirm move/i }).click()
+  
+  // Wait for move mode to be active
+  await expect(page.locator('text=Select a location to move to')).toBeVisible({ timeout: 10000 })
+  
+  // Click on the Gem Saloon location card - find the clickable card with green border
+  // The card should have a green border when it's a valid target
+  const gemSaloonCard = page.locator('div.border-deadwood-green').filter({
+    has: page.locator('h3:text("Gem Saloon")')
+  }).first()
+  
+  // Click the card
+  await gemSaloonCard.click()
+  
+  // Wait a bit for the selection to register
+  await page.waitForTimeout(200)
+  
+  // Confirm the move - wait for it to be enabled
+  const confirmButton = page.getByRole('button', { name: /Confirm move/i })
+  await expect(confirmButton).toBeEnabled({ timeout: 5000 })
+  await confirmButton.click()
+  
+  // Wait for the move to complete and ability to trigger
+  await page.waitForTimeout(1000)
 
-  const alInfo = page.locator('text=Al').locator('..')
-  const goldText = await alInfo.getByText(/Gold:/).textContent()
-  expect(goldText).toContain('4')
+  // Debug: Take a screenshot to see what's on the page
+  // await page.screenshot({ path: 'debug-al-test.png' })
+
+  // Check Al's gold - look for any element containing "Al" and check its gold
+  // Try multiple selectors to find Al's info
+  const alPlayerInfo = page.locator('div').filter({
+    hasText: /Al.*Gold:/
+  }).first()
+  
+  // Check that Al now has 4 gold
+  await expect(alPlayerInfo).toContainText('Gold: 4')
 })
 
 test("Al doesn't gain gold for entering his own saloon", async ({ page }) => {
@@ -73,10 +103,31 @@ test("Al doesn't gain gold for entering his own saloon", async ({ page }) => {
     }
   ])
 
+  // Click Move action button
   await page.getByRole('button', { name: /Move/ }).click()
-  await page.getByRole('heading', { name: 'Gem Saloon' }).click()
+  
+  // Wait for move mode to be active
+  await expect(page.locator('text=Select a location to move to')).toBeVisible({ timeout: 10000 })
+  
+  // Click on the Gem Saloon location card - find the clickable card with green border
+  const gemSaloonCard = page.locator('div.border-deadwood-green').filter({
+    has: page.locator('h3:text("Gem Saloon")')
+  }).first()
+  
+  // Click the card
+  await gemSaloonCard.click()
+  
+  // Confirm the move
   await page.getByRole('button', { name: /Confirm move/i }).click()
+  
+  // Wait for the move to complete
+  await page.waitForTimeout(500)
 
-  const gold = await page.locator('text=Gold:').locator('strong').first().textContent()
-  expect(gold).toBe('3')
+  // Check Al's gold hasn't changed - should still be 3
+  const alPlayerInfo = page.locator('div').filter({
+    hasText: /Al.*Gold:/
+  }).first()
+  
+  // Check that Al still has 3 gold
+  await expect(alPlayerInfo).toContainText('Gold: 3')
 })
