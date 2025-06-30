@@ -113,3 +113,8 @@
 - Added Playwright test covering influence persistence when moving to another
   location
 - What's next: run full test suite and ensure build succeeds
+
+### [2025-06-30 12:02 UTC] Fix player color display bug
+- Removed conditional influence star styling overriding player colors
+- Verified lint, tests, and build all succeed
+- What's next: monitor UI to ensure colors remain consistent
