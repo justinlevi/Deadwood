@@ -14,29 +14,35 @@ const LocationHeatmap: React.FC<LocationHeatmapProps> = ({ simulations }) => {
       { id: 2, name: 'Bella Union', x: 500, y: 100 },
       { id: 3, name: 'Sheriff Office', x: 100, y: 300 },
       { id: 4, name: 'Freight Office', x: 300, y: 300 },
-      { id: 5, name: "Wu's Pig Alley", x: 500, y: 300 }
+      { id: 5, name: "Wu's Pig Alley", x: 500, y: 300 },
     ]
-    
-    const stats = locations.map(loc => ({
+
+    const stats = locations.map((loc) => ({
       ...loc,
       claims: 0,
       moves: 0,
       challenges: 0,
       totalInfluence: 0,
-      contestedness: 0
+      contestedness: 0,
     }))
-    
+
     // Process all actions
-    simulations.forEach(sim => {
+    simulations.forEach((sim) => {
       const locationPlayers = new Map<number, Set<string>>()
-      
+
       sim.actions.forEach((action: any) => {
         if (action.actionType === 'claim' && action.target !== undefined) {
           stats[action.target].claims++
           stats[action.target].totalInfluence += action.amount || 1
-        } else if (action.actionType === 'move' && action.target !== undefined) {
+        } else if (
+          action.actionType === 'move' &&
+          action.target !== undefined
+        ) {
           stats[action.target].moves++
-        } else if (action.actionType === 'challenge' && action.target !== undefined) {
+        } else if (
+          action.actionType === 'challenge' &&
+          action.target !== undefined
+        ) {
           // Find where the challenge happened
           const targetPlayer = sim.finalScores[action.target]
           if (targetPlayer) {
@@ -44,7 +50,7 @@ const LocationHeatmap: React.FC<LocationHeatmapProps> = ({ simulations }) => {
             stats[0].challenges++ // Default to first location
           }
         }
-        
+
         // Track contestedness
         if (action.actionType === 'claim' && action.target !== undefined) {
           if (!locationPlayers.has(action.target)) {
@@ -53,7 +59,7 @@ const LocationHeatmap: React.FC<LocationHeatmapProps> = ({ simulations }) => {
           locationPlayers.get(action.target)!.add(action.playerId)
         }
       })
-      
+
       // Calculate contestedness
       locationPlayers.forEach((players, locId) => {
         if (players.size > 1) {
@@ -61,25 +67,27 @@ const LocationHeatmap: React.FC<LocationHeatmapProps> = ({ simulations }) => {
         }
       })
     })
-    
+
     // Normalize values for heatmap
-    const maxClaims = Math.max(...stats.map(s => s.claims))
-    const maxMoves = Math.max(...stats.map(s => s.moves))
-    
-    return stats.map(stat => ({
+    const maxClaims = Math.max(...stats.map((s) => s.claims))
+    const maxMoves = Math.max(...stats.map((s) => s.moves))
+
+    return stats.map((stat) => ({
       ...stat,
       claimIntensity: maxClaims > 0 ? stat.claims / maxClaims : 0,
       moveIntensity: maxMoves > 0 ? stat.moves / maxMoves : 0,
-      contestedRate: simulations.length > 0 ? 
-        (stat.contestedness / simulations.length) * 100 : 0
+      contestedRate:
+        simulations.length > 0
+          ? (stat.contestedness / simulations.length) * 100
+          : 0,
     }))
   }, [simulations])
-  
+
   const getHeatColor = (intensity: number) => {
-    const hue = 240 - (intensity * 240) // Blue to Red
+    const hue = 240 - intensity * 240 // Blue to Red
     return `hsl(${hue}, 70%, 50%)`
   }
-  
+
   return (
     <div className="card location-heatmap">
       <div className="card-header">
@@ -88,13 +96,17 @@ const LocationHeatmap: React.FC<LocationHeatmapProps> = ({ simulations }) => {
             <MapIcon size={20} />
             Location Heatmap
           </h3>
-          <p className="card-subtitle">Activity and influence distribution across locations</p>
+          <p className="card-subtitle">
+            Activity and influence distribution across locations
+          </p>
         </div>
       </div>
-      
+
       {simulations.length === 0 ? (
         <div className="empty-state">
-          <p>No simulation data available. Run some simulations to see results.</p>
+          <p>
+            No simulation data available. Run some simulations to see results.
+          </p>
         </div>
       ) : (
         <>
@@ -108,20 +120,69 @@ const LocationHeatmap: React.FC<LocationHeatmapProps> = ({ simulations }) => {
               </select>
             </label>
           </div>
-          
+
           <div className="board-visualization">
             <svg viewBox="0 0 600 400" className="board-svg">
               {/* Draw connections */}
-              <line x1="100" y1="100" x2="300" y2="100" stroke="#ddd" strokeWidth="2" />
-              <line x1="300" y1="100" x2="500" y2="100" stroke="#ddd" strokeWidth="2" />
-              <line x1="100" y1="100" x2="100" y2="300" stroke="#ddd" strokeWidth="2" />
-              <line x1="300" y1="100" x2="300" y2="300" stroke="#ddd" strokeWidth="2" />
-              <line x1="500" y1="100" x2="500" y2="300" stroke="#ddd" strokeWidth="2" />
-              <line x1="100" y1="300" x2="300" y2="300" stroke="#ddd" strokeWidth="2" />
-              <line x1="300" y1="300" x2="500" y2="300" stroke="#ddd" strokeWidth="2" />
-              
+              <line
+                x1="100"
+                y1="100"
+                x2="300"
+                y2="100"
+                stroke="#ddd"
+                strokeWidth="2"
+              />
+              <line
+                x1="300"
+                y1="100"
+                x2="500"
+                y2="100"
+                stroke="#ddd"
+                strokeWidth="2"
+              />
+              <line
+                x1="100"
+                y1="100"
+                x2="100"
+                y2="300"
+                stroke="#ddd"
+                strokeWidth="2"
+              />
+              <line
+                x1="300"
+                y1="100"
+                x2="300"
+                y2="300"
+                stroke="#ddd"
+                strokeWidth="2"
+              />
+              <line
+                x1="500"
+                y1="100"
+                x2="500"
+                y2="300"
+                stroke="#ddd"
+                strokeWidth="2"
+              />
+              <line
+                x1="100"
+                y1="300"
+                x2="300"
+                y2="300"
+                stroke="#ddd"
+                strokeWidth="2"
+              />
+              <line
+                x1="300"
+                y1="300"
+                x2="500"
+                y2="300"
+                stroke="#ddd"
+                strokeWidth="2"
+              />
+
               {/* Draw locations */}
-              {locationData.map(loc => (
+              {locationData.map((loc) => (
                 <g key={loc.id}>
                   <circle
                     cx={loc.x}
@@ -153,11 +214,11 @@ const LocationHeatmap: React.FC<LocationHeatmapProps> = ({ simulations }) => {
               ))}
             </svg>
           </div>
-          
+
           <div className="location-stats">
             <h4>Location Statistics</h4>
             <div className="location-grid">
-              {locationData.map(loc => (
+              {locationData.map((loc) => (
                 <div key={loc.id} className="location-card">
                   <h5>{loc.name}</h5>
                   <div className="location-metrics">
@@ -171,7 +232,9 @@ const LocationHeatmap: React.FC<LocationHeatmapProps> = ({ simulations }) => {
                     </div>
                     <div className="metric">
                       <span className="metric-label">Contested:</span>
-                      <span className="metric-value">{loc.contestedRate.toFixed(1)}%</span>
+                      <span className="metric-value">
+                        {loc.contestedRate.toFixed(1)}%
+                      </span>
                     </div>
                     <div className="metric">
                       <span className="metric-label">Total Influence:</span>

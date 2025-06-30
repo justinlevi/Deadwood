@@ -1,17 +1,17 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   /* Custom colors for Deadwood theme */
-  --color-deadwood-brown: #8B4513;
+  --color-deadwood-brown: #8b4513;
   --color-deadwood-dark-brown: #654321;
-  --color-deadwood-tan: #F5DEB3;
-  --color-deadwood-light-tan: #FFF8DC;
-  --color-deadwood-sienna: #A0522D;
-  --color-deadwood-gold: #FFD700;
-  --color-deadwood-green: #32CD32;
-  --color-deadwood-red: #DC143C;
-  --color-deadwood-sand: #F4A460;
-  --color-deadwood-beige: #DEB887;
+  --color-deadwood-tan: #f5deb3;
+  --color-deadwood-light-tan: #fff8dc;
+  --color-deadwood-sienna: #a0522d;
+  --color-deadwood-gold: #ffd700;
+  --color-deadwood-green: #32cd32;
+  --color-deadwood-red: #dc143c;
+  --color-deadwood-sand: #f4a460;
+  --color-deadwood-beige: #deb887;
 }
 
 :root {
@@ -91,4 +91,3 @@ button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
-

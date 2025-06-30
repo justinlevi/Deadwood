@@ -65,17 +65,18 @@ npm run simulate custom 500 4 balanced
 
 ### Current Performance (50 games per strategy)
 
-| Strategy | Claims/Game | Avg Influence | Avg Rounds | Notes |
-|----------|-------------|---------------|------------|-------|
-| Random | 18.6 | 6.7 | 14.2 | Chaotic but functional |
-| Greedy | 18.0 | 6.8 | 6.0 | Fast games, efficient |
-| Balanced | 23.8 | 7.3 | 6.5 | Best overall performance |
-| Aggressive | 48.1 | 2.9 | 21.0 | Challenges disrupt games |
-| Defensive | 20.4 | 5.9 | 17.5 | Conservative play |
+| Strategy   | Claims/Game | Avg Influence | Avg Rounds | Notes                    |
+| ---------- | ----------- | ------------- | ---------- | ------------------------ |
+| Random     | 18.6        | 6.7           | 14.2       | Chaotic but functional   |
+| Greedy     | 18.0        | 6.8           | 6.0        | Fast games, efficient    |
+| Balanced   | 23.8        | 7.3           | 6.5        | Best overall performance |
+| Aggressive | 48.1        | 2.9           | 21.0       | Challenges disrupt games |
+| Defensive  | 20.4        | 5.9           | 17.5       | Conservative play        |
 
 ### Character Balance Issues
 
 Current win rates show significant imbalance:
+
 - **Cy Tolliver**: 60% (movement ability too strong)
 - **Al Swearengen**: 20% (gold generation helps)
 - **Seth Bullock**: 10% (challenge discount undervalued)

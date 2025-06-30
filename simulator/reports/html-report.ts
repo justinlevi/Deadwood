@@ -7,14 +7,15 @@ export async function generateHTMLReport(
   const winRates = analyzer.calculateWinRates(simulations)
   const actionStats = analyzer.calculateActionStats(simulations)
   const locationHeatmap = analyzer.calculateLocationHeatmap(simulations)
-  const firstPlayerAdvantage = analyzer.calculateFirstPlayerAdvantage(simulations)
+  const firstPlayerAdvantage =
+    analyzer.calculateFirstPlayerAdvantage(simulations)
   const balance = analyzer.calculateBalanceMetrics(simulations)
   const strategyPerformance = analyzer.calculateStrategyPerformance(simulations)
   const gameLengthDist = analyzer.calculateGameLengthDistribution(simulations)
-  
+
   const timestamp = new Date().toISOString()
   const totalGames = simulations.length
-  
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -224,7 +225,9 @@ export async function generateHTMLReport(
                 </tr>
             </thead>
             <tbody>
-                ${winRates.map(stat => `
+                ${winRates
+                  .map(
+                    (stat) => `
                     <tr>
                         <td><strong>${stat.character}</strong></td>
                         <td>${stat.games}</td>
@@ -232,7 +235,9 @@ export async function generateHTMLReport(
                         <td>${stat.winRate.toFixed(1)}%</td>
                         <td>${(stat.winRate - 25).toFixed(1)}%</td>
                     </tr>
-                `).join('')}
+                `
+                  )
+                  .join('')}
             </tbody>
         </table>
     </div>
@@ -252,13 +257,17 @@ export async function generateHTMLReport(
                     </tr>
                 </thead>
                 <tbody>
-                    ${actionStats.map(stat => `
+                    ${actionStats
+                      .map(
+                        (stat) => `
                         <tr>
                             <td><strong>${stat.actionType}</strong></td>
                             <td>${stat.totalActions.toLocaleString()}</td>
                             <td>${stat.avgPerGame.toFixed(1)}</td>
                         </tr>
-                    `).join('')}
+                    `
+                      )
+                      .join('')}
                 </tbody>
             </table>
         </div>
@@ -275,16 +284,21 @@ export async function generateHTMLReport(
         <h2>Location Heatmap</h2>
         <p>Average influence claimed per location per game</p>
         <div class="heatmap">
-            ${locationHeatmap.map(loc => {
-                const intensity = Math.min(255, Math.floor(loc.avgInfluence * 85))
-                const color = `rgb(${139 + intensity/3}, ${69 - intensity/5}, ${19 - intensity/10})`
+            ${locationHeatmap
+              .map((loc) => {
+                const intensity = Math.min(
+                  255,
+                  Math.floor(loc.avgInfluence * 85)
+                )
+                const color = `rgb(${139 + intensity / 3}, ${69 - intensity / 5}, ${19 - intensity / 10})`
                 return `
                     <div class="heatmap-cell" style="background: ${color}">
                         <div class="heatmap-label">${loc.locationName}</div>
                         <div class="heatmap-value">${loc.avgInfluence.toFixed(1)}</div>
                     </div>
                 `
-            }).join('')}
+              })
+              .join('')}
         </div>
     </div>
     
@@ -296,14 +310,18 @@ export async function generateHTMLReport(
             </div>
         </div>
         
-        ${strategyPerformance.length > 0 ? `
+        ${
+          strategyPerformance.length > 0
+            ? `
         <div class="section">
             <h2>AI Strategy Performance</h2>
             <div class="chart-container small">
                 <canvas id="strategyChart"></canvas>
             </div>
         </div>
-        ` : ''}
+        `
+            : ''
+        }
     </div>
     
     <script>
@@ -311,10 +329,10 @@ export async function generateHTMLReport(
         new Chart(document.getElementById('winRateChart'), {
             type: 'bar',
             data: {
-                labels: ${JSON.stringify(winRates.map(s => s.character))},
+                labels: ${JSON.stringify(winRates.map((s) => s.character))},
                 datasets: [{
                     label: 'Win Rate %',
-                    data: ${JSON.stringify(winRates.map(s => s.winRate))},
+                    data: ${JSON.stringify(winRates.map((s) => s.winRate))},
                     backgroundColor: [
                         'rgba(139, 69, 19, 0.8)',
                         'rgba(210, 105, 30, 0.8)',
@@ -360,9 +378,9 @@ export async function generateHTMLReport(
         new Chart(document.getElementById('actionChart'), {
             type: 'doughnut',
             data: {
-                labels: ${JSON.stringify(actionStats.map(s => s.actionType))},
+                labels: ${JSON.stringify(actionStats.map((s) => s.actionType))},
                 datasets: [{
-                    data: ${JSON.stringify(actionStats.map(s => s.totalActions))},
+                    data: ${JSON.stringify(actionStats.map((s) => s.totalActions))},
                     backgroundColor: [
                         'rgba(139, 69, 19, 0.8)',
                         'rgba(210, 105, 30, 0.8)',
@@ -386,10 +404,10 @@ export async function generateHTMLReport(
         new Chart(document.getElementById('lengthChart'), {
             type: 'line',
             data: {
-                labels: ${JSON.stringify(gameLengthDist.map(d => d.rounds))},
+                labels: ${JSON.stringify(gameLengthDist.map((d) => d.rounds))},
                 datasets: [{
                     label: 'Games',
-                    data: ${JSON.stringify(gameLengthDist.map(d => d.count))},
+                    data: ${JSON.stringify(gameLengthDist.map((d) => d.count))},
                     borderColor: 'rgba(139, 69, 19, 1)',
                     backgroundColor: 'rgba(139, 69, 19, 0.1)',
                     tension: 0.4
@@ -423,10 +441,10 @@ export async function generateHTMLReport(
         new Chart(document.getElementById('turnOrderChart'), {
             type: 'bar',
             data: {
-                labels: ${JSON.stringify(firstPlayerAdvantage.map(s => `Player ${s.position + 1}`))},
+                labels: ${JSON.stringify(firstPlayerAdvantage.map((s) => `Player ${s.position + 1}`))},
                 datasets: [{
                     label: 'Win Rate %',
-                    data: ${JSON.stringify(firstPlayerAdvantage.map(s => s.winRate))},
+                    data: ${JSON.stringify(firstPlayerAdvantage.map((s) => s.winRate))},
                     backgroundColor: 'rgba(139, 69, 19, 0.8)',
                     borderColor: 'rgba(139, 69, 19, 1)',
                     borderWidth: 2
@@ -451,15 +469,17 @@ export async function generateHTMLReport(
             }
         });
         
-        ${strategyPerformance.length > 0 ? `
+        ${
+          strategyPerformance.length > 0
+            ? `
         // Strategy Performance Chart
         new Chart(document.getElementById('strategyChart'), {
             type: 'bar',
             data: {
-                labels: ${JSON.stringify(strategyPerformance.map(s => s.strategy))},
+                labels: ${JSON.stringify(strategyPerformance.map((s) => s.strategy))},
                 datasets: [{
                     label: 'Win Rate %',
-                    data: ${JSON.stringify(strategyPerformance.map(s => s.winRate))},
+                    data: ${JSON.stringify(strategyPerformance.map((s) => s.winRate))},
                     backgroundColor: 'rgba(210, 105, 30, 0.8)',
                     borderColor: 'rgba(210, 105, 30, 1)',
                     borderWidth: 2
@@ -483,67 +503,89 @@ export async function generateHTMLReport(
                 }
             }
         });
-        ` : ''}
+        `
+            : ''
+        }
     </script>
 </body>
 </html>`
-  
+
   return html
 }
 
-function generateBalanceWarnings(balance: any, winRates: any[], actionStats: any[]): string {
+function generateBalanceWarnings(
+  balance: any,
+  winRates: any[],
+  actionStats: any[]
+): string {
   const warnings: string[] = []
   const successes: string[] = []
-  
+
   // Check character balance
-  winRates.forEach(stat => {
+  winRates.forEach((stat) => {
     if (stat.winRate > 35) {
-      warnings.push(`${stat.character} win rate too high (${stat.winRate.toFixed(1)}%)`)
+      warnings.push(
+        `${stat.character} win rate too high (${stat.winRate.toFixed(1)}%)`
+      )
     } else if (stat.winRate < 15) {
-      warnings.push(`${stat.character} win rate too low (${stat.winRate.toFixed(1)}%)`)
+      warnings.push(
+        `${stat.character} win rate too low (${stat.winRate.toFixed(1)}%)`
+      )
     }
   })
-  
+
   // Check game length
   if (balance.avgGameLength > 15) {
-    warnings.push(`Games taking too long (avg ${balance.avgGameLength.toFixed(1)} rounds)`)
+    warnings.push(
+      `Games taking too long (avg ${balance.avgGameLength.toFixed(1)} rounds)`
+    )
   } else if (balance.avgGameLength < 8) {
-    warnings.push(`Games ending too quickly (avg ${balance.avgGameLength.toFixed(1)} rounds)`)
+    warnings.push(
+      `Games ending too quickly (avg ${balance.avgGameLength.toFixed(1)} rounds)`
+    )
   }
-  
+
   // Check action usage
-  const challengeStats = actionStats.find(s => s.actionType === 'challenge')
+  const challengeStats = actionStats.find((s) => s.actionType === 'challenge')
   if (challengeStats && challengeStats.avgPerGame < 0.5) {
-    warnings.push(`Challenges underused (${challengeStats.avgPerGame.toFixed(1)} per game)`)
+    warnings.push(
+      `Challenges underused (${challengeStats.avgPerGame.toFixed(1)} per game)`
+    )
   }
-  
-  const claimStats = actionStats.find(s => s.actionType === 'claim')
+
+  const claimStats = actionStats.find((s) => s.actionType === 'claim')
   if (claimStats && claimStats.avgPerGame < 10) {
-    warnings.push(`Claims too low (${claimStats.avgPerGame.toFixed(1)} per game)`)
+    warnings.push(
+      `Claims too low (${claimStats.avgPerGame.toFixed(1)} per game)`
+    )
   }
-  
+
   // Check balance score
   if (balance.characterBalance > 0.8) {
-    successes.push(`Good character balance (score: ${balance.characterBalance.toFixed(2)})`)
+    successes.push(
+      `Good character balance (score: ${balance.characterBalance.toFixed(2)})`
+    )
   }
-  
+
   if (balance.winRateStdDev < 10) {
-    successes.push(`Excellent win rate distribution (σ: ${balance.winRateStdDev.toFixed(1)}%)`)
+    successes.push(
+      `Excellent win rate distribution (σ: ${balance.winRateStdDev.toFixed(1)}%)`
+    )
   }
-  
+
   let html = ''
-  
+
   if (warnings.length > 0) {
     html += '<div class="warning"><strong>⚠️ Balance Warnings:</strong><ul>'
-    warnings.forEach(w => html += `<li>${w}</li>`)
+    warnings.forEach((w) => (html += `<li>${w}</li>`))
     html += '</ul></div>'
   }
-  
+
   if (successes.length > 0) {
     html += '<div class="success"><strong>✅ Balance Achievements:</strong><ul>'
-    successes.forEach(s => html += `<li>${s}</li>`)
+    successes.forEach((s) => (html += `<li>${s}</li>`))
     html += '</ul></div>'
   }
-  
+
   return html
 }

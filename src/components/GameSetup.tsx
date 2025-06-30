@@ -14,9 +14,13 @@ const GameSetup: React.FC<Props> = ({ onStartGame }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-deadwood-brown to-deadwood-sienna flex items-center justify-center p-4">
       <div className="bg-deadwood-tan p-8 rounded-lg shadow-2xl border-4 border-deadwood-dark-brown max-w-md w-full animate-fade-in">
-        <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 text-deadwood-dark-brown">Deadwood Showdown</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 text-deadwood-dark-brown">
+          Deadwood Showdown
+        </h1>
         <div className="mb-6">
-          <label className="block text-deadwood-dark-brown font-bold mb-2">Number of Players:</label>
+          <label className="block text-deadwood-dark-brown font-bold mb-2">
+            Number of Players:
+          </label>
           <select
             value={playerCount}
             onChange={(e) => setPlayerCount(Number(e.target.value))}
@@ -28,7 +32,9 @@ const GameSetup: React.FC<Props> = ({ onStartGame }) => {
           </select>
         </div>
         <div className="mb-8">
-          <label className="block text-deadwood-dark-brown font-bold mb-2">AI Difficulty:</label>
+          <label className="block text-deadwood-dark-brown font-bold mb-2">
+            AI Difficulty:
+          </label>
           <select
             value={aiDifficulty}
             onChange={(e) => setAiDifficulty(e.target.value as any)}

@@ -36,9 +36,10 @@ const DeadwoodGame: React.FC = () => {
   }
   const [gameState, dispatch] = useReducer(gameReducer, initialState)
 
-  const currentPlayer = gameState.phase !== GamePhase.SETUP 
-    ? getPlayerSafe(gameState.players, gameState.currentPlayer)
-    : null
+  const currentPlayer =
+    gameState.phase !== GamePhase.SETUP
+      ? getPlayerSafe(gameState.players, gameState.currentPlayer)
+      : null
 
   if (!currentPlayer && gameState.phase === GamePhase.PLAYER_TURN) {
     return (
@@ -161,15 +162,27 @@ const DeadwoodGame: React.FC = () => {
     }
 
     // For move and challenge actions, use the selected location
-    if (action === ActionType.MOVE && gameState.selectedLocation !== undefined) {
+    if (
+      action === ActionType.MOVE &&
+      gameState.selectedLocation !== undefined
+    ) {
       dispatch({ type: 'SELECT_ACTION', payload: action })
-      dispatch({ type: 'SET_ACTION_TARGET', payload: { target: gameState.selectedLocation } })
-    } else if (action === ActionType.CHALLENGE && gameState.selectedLocation !== undefined) {
+      dispatch({
+        type: 'SET_ACTION_TARGET',
+        payload: { target: gameState.selectedLocation },
+      })
+    } else if (
+      action === ActionType.CHALLENGE &&
+      gameState.selectedLocation !== undefined
+    ) {
       dispatch({ type: 'SELECT_ACTION', payload: action })
-      
-      const location = getLocationSafe(gameState.board, gameState.selectedLocation)
+
+      const location = getLocationSafe(
+        gameState.board,
+        gameState.selectedLocation
+      )
       if (!location) return
-      
+
       const playersAtLocation = gameState.players.filter(
         (p) => p.position === gameState.selectedLocation
       )
@@ -248,13 +261,17 @@ const DeadwoodGame: React.FC = () => {
   const isActionAvailable = (action: ActionType): boolean => {
     const current = currentPlayer
     if (!current) return false
-    
+
     switch (action) {
       case ActionType.MOVE: {
         // Move is available if a location is selected and it's not the current location
         if (gameState.selectedLocation === undefined) return false
         if (gameState.selectedLocation === current.position) return false
-        const moveCost = getMoveCost(current, current.position, gameState.selectedLocation)
+        const moveCost = getMoveCost(
+          current,
+          current.position,
+          gameState.selectedLocation
+        )
         return current.gold >= moveCost
       }
       case ActionType.CLAIM: {
@@ -271,7 +288,7 @@ const DeadwoodGame: React.FC = () => {
         if (gameState.selectedLocation === undefined) return false
         const cost = getChallengeCost(current)
         if (current.gold < cost) return false
-        
+
         const playersAtLocation = gameState.players.filter(
           (p) => p.position === gameState.selectedLocation
         )
@@ -322,13 +339,17 @@ const DeadwoodGame: React.FC = () => {
       {/* Game Header */}
       <div className="bg-deadwood-dark-brown text-white py-3 px-4 shadow-lg">
         <div className="text-center text-lg md:text-xl font-bold">
-          {gameState.pendingAction?.type === ActionType.MOVE && gameState.pendingAction.target === undefined
+          {gameState.pendingAction?.type === ActionType.MOVE &&
+          gameState.pendingAction.target === undefined
             ? 'Select a location to move to'
-            : gameState.pendingAction?.type === ActionType.CHALLENGE && gameState.pendingAction.target === undefined
-            ? 'Select a player to challenge'
-            : gameState.selectedLocation === undefined && !gameState.pendingAction && isHumanTurn
-            ? 'Click a location to see available actions'
-            : gameState.message}
+            : gameState.pendingAction?.type === ActionType.CHALLENGE &&
+                gameState.pendingAction.target === undefined
+              ? 'Select a player to challenge'
+              : gameState.selectedLocation === undefined &&
+                  !gameState.pendingAction &&
+                  isHumanTurn
+                ? 'Click a location to see available actions'
+                : gameState.message}
         </div>
         <div className="text-center text-sm md:text-base opacity-80 mt-1">
           Round {gameState.roundCount} of 20 • Player{' '}
@@ -337,43 +358,52 @@ const DeadwoodGame: React.FC = () => {
       </div>
 
       {/* Main Game Grid */}
-      <div className="flex-1 overflow-auto" style={{ paddingBottom: isHumanTurn ? '250px' : '1rem' }}>
+      <div
+        className="flex-1 overflow-auto"
+        style={{ paddingBottom: isHumanTurn ? '250px' : '1rem' }}
+      >
         <div className="p-4 lg:p-6 xl:p-8 max-w-[2400px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] xl:grid-cols-[350px_1fr_350px] 2xl:grid-cols-[400px_1fr_400px] 3xl:grid-cols-[minmax(400px,500px)_1fr_minmax(400px,500px)] gap-4 lg:gap-6">
-            
             {/* Current Player Info */}
-            <div 
+            <div
               className="bg-deadwood-tan rounded-lg p-4 shadow-lg border-4 relative overflow-hidden"
               style={{ borderColor: currentPlayer?.color || '#ffd700' }}
               data-testid="current-player"
             >
               {/* Player color overlay */}
-              <div 
+              <div
                 className="absolute inset-0 opacity-20 pointer-events-none"
                 style={{ backgroundColor: currentPlayer?.color }}
               ></div>
               <div className="relative z-10">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <div className="font-bold text-lg flex items-center gap-1 text-deadwood-dark-brown">
-                    <span
-                      data-testid="current-player-star"
-                      style={{ color: currentPlayer?.color }}
-                    >
-                      ★
-                    </span>
-                    {currentPlayer?.name} - {currentPlayer?.character.name}
-                  </div>
-                  <div className="text-sm italic text-deadwood-brown">
-                    {currentPlayer?.character.ability}
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <div className="font-bold text-lg flex items-center gap-1 text-deadwood-dark-brown">
+                      <span
+                        data-testid="current-player-star"
+                        style={{ color: currentPlayer?.color }}
+                      >
+                        ★
+                      </span>
+                      {currentPlayer?.name} - {currentPlayer?.character.name}
+                    </div>
+                    <div className="text-sm italic text-deadwood-brown">
+                      {currentPlayer?.character.ability}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex gap-4 text-deadwood-dark-brown">
-                <div>Gold: <strong>{currentPlayer?.gold}</strong></div>
-                <div>Influence: <strong>{currentPlayer?.totalInfluence}</strong></div>
-                <div>Actions: <strong>{2 - gameState.completedActions.length}</strong></div>
-              </div>
+                <div className="flex gap-4 text-deadwood-dark-brown">
+                  <div>
+                    Gold: <strong>{currentPlayer?.gold}</strong>
+                  </div>
+                  <div>
+                    Influence: <strong>{currentPlayer?.totalInfluence}</strong>
+                  </div>
+                  <div>
+                    Actions:{' '}
+                    <strong>{2 - gameState.completedActions.length}</strong>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -384,15 +414,21 @@ const DeadwoodGame: React.FC = () => {
                   const playersAtLocation = gameState.players.filter(
                     (p) => p.position === location.id
                   )
-                  const isCurrentLocation = currentPlayer?.position === location.id
+                  const isCurrentLocation =
+                    currentPlayer?.position === location.id
                   // In the new flow, all locations are clickable
                   const isValidTarget = true
                   // Only show move cost when in move selection mode
-                  const moveCost = currentPlayer && 
+                  const moveCost =
+                    currentPlayer &&
                     location.id !== currentPlayer.position &&
                     gameState.pendingAction?.type === ActionType.MOVE
-                    ? getMoveCost(currentPlayer, currentPlayer.position, location.id)
-                    : undefined
+                      ? getMoveCost(
+                          currentPlayer,
+                          currentPlayer.position,
+                          location.id
+                        )
+                      : undefined
                   return (
                     <LocationCard
                       key={location.id}
@@ -458,7 +494,10 @@ const DeadwoodGame: React.FC = () => {
                   <h3 className="font-bold mb-2">Action History</h3>
                   <div className="text-sm space-y-1">
                     {gameState.actionLog.map((entry, i) => (
-                      <div key={i} className="pb-1 border-b border-deadwood-brown/20 last:border-0">
+                      <div
+                        key={i}
+                        className="pb-1 border-b border-deadwood-brown/20 last:border-0"
+                      >
                         {entry}
                       </div>
                     ))}
@@ -483,7 +522,7 @@ const DeadwoodGame: React.FC = () => {
                       data-testid={`other-player-${player.id}`}
                     >
                       <div className="font-bold mb-1 flex items-center gap-1">
-                        <span 
+                        <span
                           data-testid="player-star"
                           style={{ color: player.color }}
                         >
@@ -508,7 +547,10 @@ const DeadwoodGame: React.FC = () => {
                   <h3 className="font-bold mb-2">Action History</h3>
                   <div className="text-sm space-y-1">
                     {gameState.actionLog.map((entry, i) => (
-                      <div key={i} className="pb-1 border-b border-deadwood-brown/20 last:border-0">
+                      <div
+                        key={i}
+                        className="pb-1 border-b border-deadwood-brown/20 last:border-0"
+                      >
                         {entry}
                       </div>
                     ))}
@@ -521,35 +563,38 @@ const DeadwoodGame: React.FC = () => {
       </div>
 
       {/* Move Confirmation Modal */}
-      {gameState.pendingAction?.type === ActionType.MOVE && gameState.pendingAction.target !== undefined && isHumanTurn && (
-        <ConfirmModal
-          isOpen={true}
-          title="Confirm Move"
-          message={(() => {
-            const cost = getMoveCost(
-              currentPlayer!,
-              currentPlayer!.position,
-              gameState.pendingAction.target
-            );
-            const locationName = LOCATIONS[gameState.pendingAction.target].name;
-            console.log('Move cost calculation:', {
-              from: currentPlayer!.position,
-              fromName: LOCATIONS[currentPlayer!.position].name,
-              to: gameState.pendingAction.target,
-              toName: locationName,
-              cost: cost,
-              character: currentPlayer!.character.name
-            });
-            return cost > 0 
-              ? `Move to ${locationName} for ${cost} gold?`
-              : `Move to ${locationName}? (Free - Adjacent location)`;
-          })()}
-          confirmText="Confirm Move"
-          onConfirm={() => dispatch({ type: 'CONFIRM_ACTION' })}
-          onCancel={() => dispatch({ type: 'CANCEL_ACTION' })}
-          disabled={false}
-        />
-      )}
+      {gameState.pendingAction?.type === ActionType.MOVE &&
+        gameState.pendingAction.target !== undefined &&
+        isHumanTurn && (
+          <ConfirmModal
+            isOpen={true}
+            title="Confirm Move"
+            message={(() => {
+              const cost = getMoveCost(
+                currentPlayer!,
+                currentPlayer!.position,
+                gameState.pendingAction.target
+              )
+              const locationName =
+                LOCATIONS[gameState.pendingAction.target].name
+              console.log('Move cost calculation:', {
+                from: currentPlayer!.position,
+                fromName: LOCATIONS[currentPlayer!.position].name,
+                to: gameState.pendingAction.target,
+                toName: locationName,
+                cost: cost,
+                character: currentPlayer!.character.name,
+              })
+              return cost > 0
+                ? `Move to ${locationName} for ${cost} gold?`
+                : `Move to ${locationName}? (Free - Adjacent location)`
+            })()}
+            confirmText="Confirm Move"
+            onConfirm={() => dispatch({ type: 'CONFIRM_ACTION' })}
+            onCancel={() => dispatch({ type: 'CANCEL_ACTION' })}
+            disabled={false}
+          />
+        )}
 
       {/* Claim Confirmation Modal */}
       {gameState.pendingAction?.type === ActionType.CLAIM && isHumanTurn && (
@@ -571,16 +616,27 @@ const DeadwoodGame: React.FC = () => {
               onChange={(e) => handleClaimAmountChange(Number(e.target.value))}
             >
               {[1, 2, 3].map((amt) => {
-                const location = getLocationSafe(gameState.board, currentPlayer!.position)
+                const location = getLocationSafe(
+                  gameState.board,
+                  currentPlayer!.position
+                )
                 if (!location) return null
-                const currentInf = getLocationInfluence(location, currentPlayer!.id)
+                const currentInf = getLocationInfluence(
+                  location,
+                  currentPlayer!.id
+                )
                 const maxSpace = location.maxInfluence - currentInf
                 const maxAffordable = currentPlayer!.gold
                 const maxClaim = Math.min(maxAffordable, maxSpace)
 
                 if (amt > maxClaim) {
                   return (
-                    <option key={amt} value={amt} disabled={true} className="text-gray-500">
+                    <option
+                      key={amt}
+                      value={amt}
+                      disabled={true}
+                      className="text-gray-500"
+                    >
                       {amt} Gold (Not available)
                     </option>
                   )
@@ -608,108 +664,122 @@ const DeadwoodGame: React.FC = () => {
       )}
 
       {/* Challenge Confirmation Modal */}
-      {gameState.pendingAction?.type === ActionType.CHALLENGE && gameState.challengeTargets && gameState.challengeTargets.length > 0 && isHumanTurn && (
-        <ConfirmModal
-          isOpen={true}
-          title="Select Target to Challenge"
-          confirmText="Confirm Challenge"
-          onConfirm={() => dispatch({ type: 'CONFIRM_ACTION' })}
-          onCancel={() => dispatch({ type: 'CANCEL_ACTION' })}
-          disabled={gameState.pendingAction.target === undefined}
-        >
-          <div className="mb-4">
-            <div className="mb-3 text-deadwood-dark-brown">
-              Select which player to challenge at this location:
-            </div>
-            {gameState.challengeTargets.map((target) => {
-              const player = gameState.players.find((p) => p.id === target.playerId)!
-              const isSelected = gameState.pendingAction.target === target.playerIndex
-              return (
-                <button
-                  key={target.playerId}
-                  className={`w-full p-3 mb-2 rounded transition-all ${
-                    isSelected 
-                      ? 'ring-4 ring-opacity-50 scale-105' 
-                      : 'hover:bg-deadwood-sienna'
-                  } ${isSelected ? 'bg-deadwood-gold text-deadwood-dark-brown' : 'bg-deadwood-brown text-white'}`}
-                  style={isSelected && currentPlayer?.color ? { 
-                    backgroundColor: currentPlayer.color,
-                    color: 'white',
-                    boxShadow: `0 0 0 4px ${currentPlayer.color}33`
-                  } : undefined}
-                  onClick={() =>
-                    dispatch({
-                      type: 'SELECT_CHALLENGE_TARGET',
-                      payload: target.playerIndex,
-                    })
-                  }
-                >
-                  {player.name} - {player.character.name}
-                  <div className="text-sm mt-1">
-                    Influence: {getLocationInfluence(gameState.board[player.position], player.id)}
-                  </div>
-                </button>
-              )
-            })}
-            {gameState.pendingAction.target !== undefined && (
-              <div className="text-sm mt-3 text-deadwood-brown">
-                Challenge cost: {getChallengeCost(currentPlayer!)} gold
+      {gameState.pendingAction?.type === ActionType.CHALLENGE &&
+        gameState.challengeTargets &&
+        gameState.challengeTargets.length > 0 &&
+        isHumanTurn && (
+          <ConfirmModal
+            isOpen={true}
+            title="Select Target to Challenge"
+            confirmText="Confirm Challenge"
+            onConfirm={() => dispatch({ type: 'CONFIRM_ACTION' })}
+            onCancel={() => dispatch({ type: 'CANCEL_ACTION' })}
+            disabled={gameState.pendingAction.target === undefined}
+          >
+            <div className="mb-4">
+              <div className="mb-3 text-deadwood-dark-brown">
+                Select which player to challenge at this location:
               </div>
-            )}
-          </div>
-        </ConfirmModal>
-      )}
+              {gameState.challengeTargets.map((target) => {
+                const player = gameState.players.find(
+                  (p) => p.id === target.playerId
+                )!
+                const isSelected =
+                  gameState.pendingAction.target === target.playerIndex
+                return (
+                  <button
+                    key={target.playerId}
+                    className={`w-full p-3 mb-2 rounded transition-all ${
+                      isSelected
+                        ? 'ring-4 ring-opacity-50 scale-105'
+                        : 'hover:bg-deadwood-sienna'
+                    } ${isSelected ? 'bg-deadwood-gold text-deadwood-dark-brown' : 'bg-deadwood-brown text-white'}`}
+                    style={
+                      isSelected && currentPlayer?.color
+                        ? {
+                            backgroundColor: currentPlayer.color,
+                            color: 'white',
+                            boxShadow: `0 0 0 4px ${currentPlayer.color}33`,
+                          }
+                        : undefined
+                    }
+                    onClick={() =>
+                      dispatch({
+                        type: 'SELECT_CHALLENGE_TARGET',
+                        payload: target.playerIndex,
+                      })
+                    }
+                  >
+                    {player.name} - {player.character.name}
+                    <div className="text-sm mt-1">
+                      Influence:{' '}
+                      {getLocationInfluence(
+                        gameState.board[player.position],
+                        player.id
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+              {gameState.pendingAction.target !== undefined && (
+                <div className="text-sm mt-3 text-deadwood-brown">
+                  Challenge cost: {getChallengeCost(currentPlayer!)} gold
+                </div>
+              )}
+            </div>
+          </ConfirmModal>
+        )}
 
       {/* Actions Panel */}
       {isHumanTurn && (
         <div className="fixed bottom-0 left-0 right-0 bg-deadwood-tan border-t-4 border-deadwood-brown p-4 shadow-2xl z-50">
           <div className="max-w-[2400px] mx-auto">
             <div className="flex gap-2 mb-2 max-w-4xl mx-auto">
-                <ActionButton
-                  action={ActionType.MOVE}
-                  isSelected={gameState.completedActions.some(
-                    (a) => a.type === ActionType.MOVE
-                  )}
-                  isDisabled={
-                    !canSelectActions || !isActionAvailable(ActionType.MOVE)
-                  }
-                  onClick={() => handleActionSelect(ActionType.MOVE)}
-                  cost={currentPlayer?.character.id === 'jane' ? 0 : undefined}
-                />
-                <ActionButton
-                  action={ActionType.CLAIM}
-                  isSelected={gameState.completedActions.some(
-                    (a) => a.type === ActionType.CLAIM
-                  )}
-                  isDisabled={
-                    !canSelectActions || !isActionAvailable(ActionType.CLAIM)
-                  }
-                  onClick={() => handleActionSelect(ActionType.CLAIM)}
-                  cost={1}
-                />
-                <ActionButton
-                  action={ActionType.CHALLENGE}
-                  isSelected={gameState.completedActions.some(
-                    (a) => a.type === ActionType.CHALLENGE
-                  )}
-                  isDisabled={
-                    !canSelectActions || !isActionAvailable(ActionType.CHALLENGE)
-                  }
-                  onClick={() => handleActionSelect(ActionType.CHALLENGE)}
-                  cost={getChallengeCost(currentPlayer)}
-                />
-                <ActionButton
-                  action={ActionType.REST}
-                  isSelected={gameState.completedActions.some(
-                    (a) => a.type === ActionType.REST
-                  )}
-                  isDisabled={!canSelectActions}
-                  onClick={() => handleActionSelect(ActionType.REST)}
-                />
-              </div>
-              <div className="text-center text-sm text-deadwood-brown">
-                {`Selected: ${gameState.completedActions.length}/2 actions`}
-              </div>
+              <ActionButton
+                action={ActionType.MOVE}
+                isSelected={gameState.completedActions.some(
+                  (a) => a.type === ActionType.MOVE
+                )}
+                isDisabled={
+                  !canSelectActions || !isActionAvailable(ActionType.MOVE)
+                }
+                onClick={() => handleActionSelect(ActionType.MOVE)}
+                cost={currentPlayer?.character.id === 'jane' ? 0 : undefined}
+              />
+              <ActionButton
+                action={ActionType.CLAIM}
+                isSelected={gameState.completedActions.some(
+                  (a) => a.type === ActionType.CLAIM
+                )}
+                isDisabled={
+                  !canSelectActions || !isActionAvailable(ActionType.CLAIM)
+                }
+                onClick={() => handleActionSelect(ActionType.CLAIM)}
+                cost={1}
+              />
+              <ActionButton
+                action={ActionType.CHALLENGE}
+                isSelected={gameState.completedActions.some(
+                  (a) => a.type === ActionType.CHALLENGE
+                )}
+                isDisabled={
+                  !canSelectActions || !isActionAvailable(ActionType.CHALLENGE)
+                }
+                onClick={() => handleActionSelect(ActionType.CHALLENGE)}
+                cost={getChallengeCost(currentPlayer)}
+              />
+              <ActionButton
+                action={ActionType.REST}
+                isSelected={gameState.completedActions.some(
+                  (a) => a.type === ActionType.REST
+                )}
+                isDisabled={!canSelectActions}
+                onClick={() => handleActionSelect(ActionType.REST)}
+              />
+            </div>
+            <div className="text-center text-sm text-deadwood-brown">
+              {`Selected: ${gameState.completedActions.length}/2 actions`}
+            </div>
           </div>
         </div>
       )}

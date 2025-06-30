@@ -24,9 +24,10 @@ const ActionButton: React.FC<Props> = ({
   cost,
 }) => {
   const info = actionInfo[action]
-  
-  const baseClasses = "flex-1 flex flex-col items-center justify-center py-3 px-2 rounded font-bold text-sm md:text-base transition-all duration-200"
-  
+
+  const baseClasses =
+    'flex-1 flex flex-col items-center justify-center py-3 px-2 rounded font-bold text-sm md:text-base transition-all duration-200'
+
   const getButtonClasses = () => {
     if (isDisabled) {
       return `${baseClasses} bg-gray-400 text-gray-600 cursor-not-allowed opacity-60`
@@ -36,7 +37,7 @@ const ActionButton: React.FC<Props> = ({
     }
     return `${baseClasses} bg-deadwood-brown text-white hover:bg-deadwood-sienna hover:shadow-md active:scale-95`
   }
-  
+
   return (
     <button
       onClick={onClick}

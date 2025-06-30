@@ -7,34 +7,34 @@
 export function setupEnvironment() {
   // Mock import.meta.env for Vite compatibility
   if (!(global as any).import) {
-    (global as any).import = {
+    ;(global as any).import = {
       meta: {
         env: {
           VITE_SUPABASE_URL: 'https://placeholder.supabase.co',
           VITE_SUPABASE_ANON_KEY: 'placeholder-key',
-          MODE: 'test'
-        }
-      }
+          MODE: 'test',
+        },
+      },
     }
   }
 
   // Mock browser APIs
   if (typeof global.sessionStorage === 'undefined') {
-    (global as any).sessionStorage = {
+    ;(global as any).sessionStorage = {
       getItem: () => null,
       setItem: () => {},
       removeItem: () => {},
       clear: () => {},
       key: () => null,
-      length: 0
+      length: 0,
     }
   }
 
   if (typeof global.window === 'undefined') {
-    (global as any).window = {
+    ;(global as any).window = {
       analytics: null,
       location: { href: 'http://localhost' },
-      document: { title: 'Deadwood Simulator' }
+      document: { title: 'Deadwood Simulator' },
     }
   }
 
@@ -42,14 +42,14 @@ export function setupEnvironment() {
     Object.defineProperty(global, 'navigator', {
       value: { onLine: true },
       writable: true,
-      configurable: true
+      configurable: true,
     })
   }
 
   // Mock crypto for session IDs
   if (typeof global.crypto === 'undefined') {
-    (global as any).crypto = {
-      randomUUID: () => 'test-' + Math.random().toString(36).substr(2, 9)
+    ;(global as any).crypto = {
+      randomUUID: () => 'test-' + Math.random().toString(36).substr(2, 9),
     }
   }
 

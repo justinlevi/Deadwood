@@ -65,10 +65,7 @@ const checkAndHandleVictory = (
   return null
 }
 
-export const executeAction = (
-  state: GameState,
-  action: any
-): GameState => {
+export const executeAction = (state: GameState, action: any): GameState => {
   const currentPlayer = getPlayerSafe(state.players, state.currentPlayer)
   if (!currentPlayer) {
     console.error('Invalid current player index')
@@ -78,7 +75,7 @@ export const executeAction = (
   const newPlayers = [...state.players]
   let logEntry: string | null = null
   let executed = false
-  
+
   switch (action.type) {
     case ActionType.MOVE: {
       if (action.target === undefined) break
@@ -209,9 +206,9 @@ export const executeAction = (
       break
     }
   }
-  
+
   if (!executed) return state
-  
+
   return {
     ...state,
     board: newBoard,
@@ -294,7 +291,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           message: 'Select your final action',
         }
       }
-      
+
       return {
         ...state,
         pendingAction: { type: actionType },
@@ -302,8 +299,8 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           actionType === ActionType.MOVE
             ? 'Select a location to move to'
             : actionType === ActionType.CLAIM
-            ? 'Select claim amount and confirm'
-            : 'Select a player to challenge',
+              ? 'Select claim amount and confirm'
+              : 'Select a player to challenge',
       }
     }
     case 'SET_ACTION_TARGET': {
