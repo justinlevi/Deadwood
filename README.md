@@ -305,6 +305,22 @@ npm run build
 
 The build folder will contain optimized static files ready for deployment.
 
+### Telemetry Configuration (Optional)
+
+The game includes optional telemetry for tracking gameplay analytics. To enable:
+
+1. Create a Supabase project at https://supabase.com
+2. Set environment variables:
+   ```bash
+   VITE_SUPABASE_URL=your_project_url
+   VITE_SUPABASE_ANON_KEY=your_anon_key
+   ```
+3. For GitHub Pages deployment, add these as repository secrets
+
+See [docs/DEPLOYMENT_TELEMETRY.md](docs/DEPLOYMENT_TELEMETRY.md) for detailed setup instructions.
+
+**Note**: The game works perfectly without telemetry. This is an optional feature for analytics.
+
 ## Game Design Philosophy
 
 Deadwood Showdown emphasizes:
