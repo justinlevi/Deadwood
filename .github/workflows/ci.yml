@@ -15,7 +15,16 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
-      - run: npm run lint
+      - name: Check code formatting
+        run: npm run lint
+        continue-on-error: true
+        id: lint-check
+      
+      - name: Formatting Check Result
+        if: steps.lint-check.outcome == 'failure'
+        run: |
+          echo "::warning::Code formatting issues detected. Run 'npm run format' locally to fix."
+          exit 1
       - run: npm test
       - name: Build
         run: npm run build
