@@ -50,16 +50,22 @@ test('prevents selecting already selected action', async ({ page }) => {
 
   await page.getByRole('button', { name: /Move/ }).click()
   await page.getByRole('heading', { name: 'Hardware Store' }).click()
-  await page.getByRole('button', { name: /Confirm Move/ }).click()
+  await page.getByRole('button', { name: /Confirm move/ }).click()
 
+  // Wait a bit for the action to be marked as completed
+  await page.waitForTimeout(100)
+  
   const moveButton = page.getByRole('button', { name: /Move/ })
-  const buttonColor = await moveButton.evaluate(el => window.getComputedStyle(el).backgroundColor)
-  expect(buttonColor).toContain('rgb(50, 205, 50)')
+  // Check if button has data-selected attribute set to true
+  const isSelected = await moveButton.getAttribute('data-selected')
+  expect(isSelected).toBe('true')
 })
 
 test('action buttons sync with game state', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'Start Game' }).click()
+  
+  await page.waitForTimeout(500) // Wait for game to initialize
 
   await page.evaluate(() => {
     const dispatch = (window as any).dispatchGameAction
@@ -67,23 +73,50 @@ test('action buttons sync with game state', async ({ page }) => {
     const playerId = state.players[0].id
     const position = state.players[0].position
 
+    // Fill current location to max capacity
     dispatch({
       type: 'SET_STATE',
       payload: {
         ...state,
         board: state.board.map((loc, i) =>
-          i === position ? { ...loc, influences: { [playerId]: 3 } } : loc
+          i === position ? { ...loc, influences: { [playerId]: loc.maxInfluence } } : loc
+        ),
+        players: state.players.map((p, i) => 
+          i === 0 ? { ...p, gold: 5 } : p // Ensure player has gold
         )
       }
     })
   })
 
+  await page.waitForTimeout(200) // Wait for state update
+
+  // Claim should be disabled at full location
   await expect(page.getByRole('button', { name: /Claim/ })).toBeDisabled()
 
+  // Move to an empty location
   await page.getByRole('button', { name: /Move/ }).click()
-  const empty = page.getByRole('heading', { name: 'Bella Union' })
-  await empty.click()
-  await page.getByRole('button', { name: /Confirm Move/ }).click()
+  
+  // Find an empty location
+  await page.evaluate(() => {
+    const state = (window as any).getGameState()
+    const emptyLocationIndex = state.board.findIndex((loc, i) => 
+      i !== state.players[0].position && Object.keys(loc.influences).length === 0
+    )
+    const emptyLocation = state.board[emptyLocationIndex]
+    
+    // Click the empty location programmatically
+    const locationElements = document.querySelectorAll('h3')
+    locationElements.forEach(el => {
+      if (el.textContent === emptyLocation.name) {
+        el.click()
+      }
+    })
+  })
+  
+  await page.getByRole('button', { name: /Confirm move/ }).click()
+  
+  await page.waitForTimeout(200) // Wait for move to complete
 
+  // Now claim should be enabled at the new empty location
   await expect(page.getByRole('button', { name: /Claim/ })).toBeEnabled()
 })

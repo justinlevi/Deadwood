@@ -18,9 +18,16 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
-      - run: npm run build
+      - name: Build with telemetry configuration
+        run: npm run build
         env:
           BASE_PATH: "/${{ github.event.repository.name }}/"
+          # Telemetry configuration - these secrets are optional
+          # To enable telemetry, add these secrets in your repository settings:
+          # - VITE_SUPABASE_URL: Your Supabase project URL
+          # - VITE_SUPABASE_ANON_KEY: Your Supabase anon key
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
         with:

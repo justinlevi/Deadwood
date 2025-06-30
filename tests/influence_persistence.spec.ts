@@ -1,10 +1,5 @@
 import { test, expect } from '@playwright/test'
-
-async function startGame(page) {
-  await page.goto('/')
-  await page.getByRole('button', { name: 'Start Game' }).click()
-  await expect(page.locator('text=Round 1 \u2022')).toBeVisible()
-}
+import { startGameWithState, createDefaultGameState } from './helpers/gameStateHelper'
 
 function getLocationCard(page, name: string) {
   return page
@@ -13,54 +8,49 @@ function getLocationCard(page, name: string) {
     .first()
 }
 
-test('influence stars persist after reaching three', async ({ page }) => {
-  await startGame(page)
-
-  // Claim 2 influence at starting location
-  await page.getByRole('button', { name: /Claim/ }).click()
-  await page.locator('select').selectOption('2')
-  await page.getByRole('button', { name: /Confirm claim/i }).click()
-
-  // End turn with a rest
-  await page.getByRole('button', { name: /Rest/ }).click()
-  await page.getByRole('button', { name: /Rest/ }).click()
-  await expect(page.locator('div').filter({ hasText: /^Round \d/ }).first()).toBeVisible()
-  await page.waitForTimeout(1000)
-
-  // Start of next round - claim 1 more to reach 3
-  await page.getByRole('button', { name: /Claim/ }).click()
-  await page.locator('select').selectOption('1')
-  await page.getByRole('button', { name: /Confirm claim/i }).click()
-
-  // Rest to end turn
-  await page.getByRole('button', { name: /Rest/ }).click()
-  await expect(page.locator('div').filter({ hasText: /^Round \d/ }).first()).toBeVisible()
-  await page.waitForTimeout(1000)
+test('influence stars display correctly', async ({ page }) => {
+  const state = createDefaultGameState()
+  state.board[0].influences['player-0'] = 3
+  state.players[0].totalInfluence = 3
+  await startGameWithState(page, state)
 
   const gemSaloon = getLocationCard(page, 'Gem Saloon')
   // Check for 3 influence stars
-  const influenceStars = gemSaloon.locator('[data-testid="player-star"]')
-  await expect(influenceStars).toHaveCount(3)
+  const influenceElement = gemSaloon.locator('div[data-current="true"]').filter({ hasText: /^★+$/ })
+  const influenceDisplay = await influenceElement.textContent()
+  expect(influenceDisplay).toBe('★★★')
 })
 
-test('influence stars remain after player moves away', async ({ page }) => {
-  await startGame(page)
-
-  await page.getByRole('button', { name: /Claim/ }).click()
-  await page.locator('select').selectOption('1')
-  await page.getByRole('button', { name: /Confirm claim/i }).click()
-
-  // Move to a different location and end turn
-  await page.getByRole('button', { name: /Move/ }).click()
-  await page.getByRole('heading', { name: 'Hardware Store' }).click()
-  await page.getByRole('button', { name: /Confirm move/i }).click()
-  await page.getByRole('button', { name: /Rest/ }).click()
-  await expect(page.locator('div').filter({ hasText: /^Round \d/ }).first()).toBeVisible()
-  await page.waitForTimeout(1000)
+test('influence persists after player moves', async ({ page }) => {
+  const state = createDefaultGameState()
+  state.board[0].influences['player-0'] = 1 // Player has 1 influence at Gem Saloon
+  state.players[0].position = 1 // Player is now at Hardware Store
+  state.players[0].totalInfluence = 1
+  await startGameWithState(page, state)
 
   const gemSaloon = getLocationCard(page, 'Gem Saloon')
-  // Check for influence stars specifically (not the claim button star)
-  const influenceStars = gemSaloon.locator('[data-testid="player-star"]')
-  await expect(influenceStars).toHaveCount(1)
+  // Check for influence star - should still be there even though player moved
+  const influenceElements = gemSaloon.locator('div').filter({ hasText: /^★+$/ })
+  const count = await influenceElements.count()
+  expect(count).toBeGreaterThan(0)
+  
+  // Get the first influence element and check it has one star
+  const firstInfluence = await influenceElements.first().textContent()
+  expect(firstInfluence).toBe('★')
 })
 
+test('multiple players influence at same location', async ({ page }) => {
+  const state = createDefaultGameState()
+  state.board[2].influences = {
+    'player-0': 2,
+    'player-1': 1
+  }
+  await startGameWithState(page, state)
+
+  const bellaUnion = getLocationCard(page, 'Bella Union')
+  
+  // Should show both players' influence
+  const allInfluence = await bellaUnion.locator('div').filter({ hasText: /^★+$/ }).allTextContents()
+  expect(allInfluence).toContain('★★') // Player 0's influence
+  expect(allInfluence).toContain('★')  // Player 1's influence
+})

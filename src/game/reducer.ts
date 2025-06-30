@@ -11,6 +11,7 @@ import {
   getLocationSafe,
   findPlayerIndexSafe,
 } from './utils'
+import { logEvent } from '../logging'
 
 export const checkVictoryConditions = (
   state: GameState
@@ -54,6 +55,23 @@ const checkAndHandleVictory = (
   void _state
   const winner = checkVictoryConditions(newState)
   if (winner !== undefined) {
+    // Log game over event
+    logEvent({
+      ts: new Date().toISOString(),
+      event_type: 'game_over',
+      round: newState.roundCount,
+      data: {
+        winner: newState.players[winner].id,
+        winnerCharacter: newState.players[winner].character.id,
+        finalScores: newState.players.map((p) => ({
+          playerId: p.id,
+          character: p.character.id,
+          totalInfluence: p.totalInfluence,
+          gold: p.gold,
+        })),
+      },
+    })
+
     return {
       ...newState,
       phase: GamePhase.GAME_OVER,
@@ -108,6 +126,20 @@ export const executeAction = (
       }
       logEntry = `${currentPlayer.name} moved to ${targetLocation.name} (-${moveCost}g). ${currentPlayer.isAI ? 'AI repositioning to a better location.' : 'Player choice.'}`
       executed = true
+
+      // Log telemetry event
+      logEvent({
+        ts: new Date().toISOString(),
+        event_type: 'move',
+        round: state.roundCount,
+        player_id: currentPlayer.id,
+        data: {
+          from: currentPlayer.position,
+          to: action.target,
+          cost: moveCost,
+          isAI: currentPlayer.isAI,
+        },
+      })
       break
     }
     case ActionType.CLAIM: {
@@ -149,6 +181,20 @@ export const executeAction = (
       }
       logEntry = `${currentPlayer.name} claimed ${actualAmount} influence at ${location.name} (-${actualAmount}g). ${currentPlayer.isAI ? 'AI wants more influence.' : 'Player decision.'}`
       executed = true
+
+      // Log telemetry event
+      logEvent({
+        ts: new Date().toISOString(),
+        event_type: 'claim',
+        round: state.roundCount,
+        player_id: currentPlayer.id,
+        data: {
+          location: currentPlayer.position,
+          amount: actualAmount,
+          requestedAmount: amount,
+          isAI: currentPlayer.isAI,
+        },
+      })
       break
     }
     case ActionType.CHALLENGE: {
@@ -210,6 +256,20 @@ export const executeAction = (
 
       logEntry = `${currentPlayer.name} challenged ${targetPlayer.name} at ${location.name} (-${challengeCost}g). ${currentPlayer.isAI ? 'AI attempts to weaken an opponent.' : 'Player chose to challenge.'}`
       executed = true
+
+      // Log telemetry event
+      logEvent({
+        ts: new Date().toISOString(),
+        event_type: 'challenge',
+        round: state.roundCount,
+        player_id: currentPlayer.id,
+        data: {
+          targetPlayerId: targetPlayer.id,
+          targetPosition: targetPlayer.position,
+          cost: challengeCost,
+          isAI: currentPlayer.isAI,
+        },
+      })
       break
     }
     case ActionType.REST: {
@@ -219,6 +279,18 @@ export const executeAction = (
       }
       logEntry = `${currentPlayer.name} rested and gained 2g. ${currentPlayer.isAI ? 'AI needed more gold.' : 'Player opted to rest.'}`
       executed = true
+
+      // Log telemetry event
+      logEvent({
+        ts: new Date().toISOString(),
+        event_type: 'rest',
+        round: state.roundCount,
+        player_id: currentPlayer.id,
+        data: {
+          goldGained: 2,
+          isAI: currentPlayer.isAI,
+        },
+      })
       break
     }
   }
@@ -235,6 +307,23 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
     case 'START_GAME': {
       const players = createPlayers(action.payload.playerCount)
+
+      // Log game start event
+      logEvent({
+        ts: new Date().toISOString(),
+        event_type: 'game_started',
+        round: 1,
+        data: {
+          playerCount: action.payload.playerCount,
+          aiDifficulty: action.payload.aiDifficulty,
+          playerCharacters: players.map((p) => ({
+            id: p.id,
+            character: p.character.id,
+            isAI: p.isAI,
+          })),
+        },
+      })
+
       return {
         phase: GamePhase.PLAYER_TURN,
         currentPlayer: 0,
@@ -246,7 +335,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         actionLog: [],
         completedActions: [],
         pendingAction: undefined,
-        message: `Round 1 • ${players[0].character.name}'s turn`,
+        message: players[0].isAI
+          ? `Round 1 • ${players[0].character.name}'s turn`
+          : 'Round 1 • Your turn',
       }
     }
     case 'SELECT_ACTION': {
@@ -281,11 +372,30 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             roundCount: nextRound,
             completedActions: [],
             pendingAction: undefined,
-            message: `Round ${nextRound} • ${newState.players[nextPlayer].character.name}'s turn`,
+            message: newState.players[nextPlayer].isAI
+              ? `Round ${nextRound} • ${newState.players[nextPlayer].character.name}'s turn`
+              : `Round ${nextRound} • Your turn`,
           }
 
           const winner = checkVictoryConditions(nextState)
           if (winner !== undefined) {
+            // Log game over event
+            logEvent({
+              ts: new Date().toISOString(),
+              event_type: 'game_over',
+              round: nextState.roundCount,
+              data: {
+                winner: nextState.players[winner].id,
+                winnerCharacter: nextState.players[winner].character.id,
+                finalScores: nextState.players.map((p) => ({
+                  playerId: p.id,
+                  character: p.character.id,
+                  totalInfluence: p.totalInfluence,
+                  gold: p.gold,
+                })),
+              },
+            })
+
             return {
               ...nextState,
               phase: GamePhase.GAME_OVER,
@@ -422,6 +532,23 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
         const winner = checkVictoryConditions(nextState)
         if (winner !== undefined) {
+          // Log game over event
+          logEvent({
+            ts: new Date().toISOString(),
+            event_type: 'game_over',
+            round: nextState.roundCount,
+            data: {
+              winner: nextState.players[winner].id,
+              winnerCharacter: nextState.players[winner].character.id,
+              finalScores: nextState.players.map((p) => ({
+                playerId: p.id,
+                character: p.character.id,
+                totalInfluence: p.totalInfluence,
+                gold: p.gold,
+              })),
+            },
+          })
+
           return {
             ...nextState,
             phase: GamePhase.GAME_OVER,
@@ -463,6 +590,23 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       })
 
       if (winner !== undefined) {
+        // Log game over event
+        logEvent({
+          ts: new Date().toISOString(),
+          event_type: 'game_over',
+          round: nextRound,
+          data: {
+            winner: state.players[winner].id,
+            winnerCharacter: state.players[winner].character.id,
+            finalScores: state.players.map((p) => ({
+              playerId: p.id,
+              character: p.character.id,
+              totalInfluence: p.totalInfluence,
+              gold: p.gold,
+            })),
+          },
+        })
+
         return {
           ...state,
           phase: GamePhase.GAME_OVER,
@@ -477,7 +621,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         roundCount: nextRound,
         completedActions: [],
         pendingAction: undefined,
-        message: `Round ${nextRound} • ${state.players[nextPlayer].character.name}'s turn`,
+        message: state.players[nextPlayer].isAI
+          ? `Round ${nextRound} • ${state.players[nextPlayer].character.name}'s turn`
+          : `Round ${nextRound} • Your turn`,
       }
     }
     case 'SET_STATE': {
