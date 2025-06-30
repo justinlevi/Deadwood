@@ -17,3 +17,10 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm test
+      - name: Build
+        run: npm run build
+        env:
+          BASE_PATH: "/${{ github.event.repository.name }}/"
+          # Use placeholder values for CI builds to ensure the app builds without secrets
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'placeholder-key' }}
