@@ -125,3 +125,9 @@
 - Tests properly use 'text=AI Player' or 'text=/AI Player.\*turn/' for actual AI turn checking
 - No updates needed as all patterns are used appropriately
 - What's next: None - all test patterns are correctly implemented
+
+### [2025-06-30 12:42 UTC] Add Supabase env plumbing
+
+- Created `.env.example` with Supabase URL and anon key variables
+- Updated `vite.config.ts` to expose these variables via `import.meta.env`
+- What's next: create migration for game logs
