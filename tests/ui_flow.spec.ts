@@ -38,14 +38,14 @@ test('moving to another location and claiming influence', async ({ page }) => {
   await page.getByRole('button', { name: /Move/ }).click()
   for (const name of locations) {
     await page.getByRole('heading', { name }).click()
-    const confirm = page.getByRole('button', { name: /Confirm MOVE/i })
+    const confirm = page.getByRole('button', { name: /Confirm Move/i })
     if (await confirm.isEnabled()) {
       await confirm.click()
       break
     }
   }
   await page.getByRole('button', { name: /Claim/ }).click()
-  await page.getByRole('button', { name: /Confirm CLAIM/i }).click()
+  await page.getByRole('button', { name: /Confirm Claim/i }).click()
   await expect.poll(() => getInfluence(page)).toBeGreaterThanOrEqual(0)
 })
 

@@ -24,7 +24,7 @@ test('influence stars persist after reaching three', async ({ page }) => {
   // End turn with a rest
   await page.getByRole('button', { name: /Rest/ }).click()
   await page.getByRole('button', { name: /Rest/ }).click()
-  await expect(page.locator('text=AI Player')).toBeVisible()
+  await expect(page.locator('div').filter({ hasText: /^Round \d/ }).first()).toBeVisible()
   await page.waitForTimeout(1000)
 
   // Start of next round - claim 1 more to reach 3
@@ -34,12 +34,13 @@ test('influence stars persist after reaching three', async ({ page }) => {
 
   // Rest to end turn
   await page.getByRole('button', { name: /Rest/ }).click()
-  await expect(page.locator('text=AI Player')).toBeVisible()
+  await expect(page.locator('div').filter({ hasText: /^Round \d/ }).first()).toBeVisible()
   await page.waitForTimeout(1000)
 
   const gemSaloon = getLocationCard(page, 'Gem Saloon')
-  const starText = await gemSaloon.locator('text=★★★').first().textContent()
-  expect(starText).toBe('★★★')
+  // Check for 3 influence stars
+  const influenceStars = gemSaloon.locator('[data-testid="player-star"]')
+  await expect(influenceStars).toHaveCount(3)
 })
 
 test('influence stars remain after player moves away', async ({ page }) => {
@@ -54,11 +55,12 @@ test('influence stars remain after player moves away', async ({ page }) => {
   await page.getByRole('heading', { name: 'Hardware Store' }).click()
   await page.getByRole('button', { name: /Confirm move/i }).click()
   await page.getByRole('button', { name: /Rest/ }).click()
-  await expect(page.locator('text=AI Player')).toBeVisible()
+  await expect(page.locator('div').filter({ hasText: /^Round \d/ }).first()).toBeVisible()
   await page.waitForTimeout(1000)
 
   const gemSaloon = getLocationCard(page, 'Gem Saloon')
-  const star = gemSaloon.locator('text=★')
-  await expect(star).toBeVisible()
+  // Check for influence stars specifically (not the claim button star)
+  const influenceStars = gemSaloon.locator('[data-testid="player-star"]')
+  await expect(influenceStars).toHaveCount(1)
 })
 

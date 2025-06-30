@@ -89,8 +89,8 @@ test('round counter visible in all game states', async ({ page }) => {
   await page.getByRole('button', { name: 'Start Game' }).click()
 
   for (let i = 0; i < 8; i++) {
-    await expect(page.locator('text=/Round \\d of/')).toBeVisible()
-    await expect(page.locator('text=/Player \\d of 4/')).toBeVisible()
+    await expect(page.locator('text=/Round \\d+ of/')).toBeVisible()
+    await expect(page.locator('text=/Player \\d+ of 4/')).toBeVisible()
 
     const isHuman = await page.locator('text=Your turn').count() > 0
     if (isHuman) {

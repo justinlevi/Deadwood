@@ -66,7 +66,7 @@ test('AI actions are cancelled when game ends', async ({ page }) => {
   })
 
   await page.getByRole('button', { name: /Claim/ }).click()
-  await page.getByRole('button', { name: /Confirm CLAIM/i }).click()
+  await page.getByRole('button', { name: /Confirm Claim/i }).click()
 
   await expect(page.locator('text=wins!')).toBeVisible()
   await waitForAI(page)
