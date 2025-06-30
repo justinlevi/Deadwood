@@ -246,7 +246,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         actionLog: [],
         completedActions: [],
         pendingAction: undefined,
-        message: `Round 1 • ${players[0].character.name}'s turn`,
+        message: players[0].isAI ? `Round 1 • ${players[0].character.name}'s turn` : 'Round 1 • Your turn',
       }
     }
     case 'SELECT_ACTION': {
@@ -281,7 +281,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             roundCount: nextRound,
             completedActions: [],
             pendingAction: undefined,
-            message: `Round ${nextRound} • ${newState.players[nextPlayer].character.name}'s turn`,
+            message: newState.players[nextPlayer].isAI ? `Round ${nextRound} • ${newState.players[nextPlayer].character.name}'s turn` : `Round ${nextRound} • Your turn`,
           }
 
           const winner = checkVictoryConditions(nextState)
@@ -477,7 +477,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         roundCount: nextRound,
         completedActions: [],
         pendingAction: undefined,
-        message: `Round ${nextRound} • ${state.players[nextPlayer].character.name}'s turn`,
+        message: state.players[nextPlayer].isAI ? `Round ${nextRound} • ${state.players[nextPlayer].character.name}'s turn` : `Round ${nextRound} • Your turn`,
       }
     }
     case 'SET_STATE': {

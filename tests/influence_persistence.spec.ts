@@ -38,9 +38,10 @@ test('influence stars persist after reaching three', async ({ page }) => {
   await page.waitForTimeout(1000)
 
   const gemSaloon = getLocationCard(page, 'Gem Saloon')
-  // Check for 3 influence stars
-  const influenceStars = gemSaloon.locator('[data-testid="player-star"]')
-  await expect(influenceStars).toHaveCount(3)
+  // Check for 3 influence stars - look for the influence element with data-current attribute
+  const influenceElement = gemSaloon.locator('[data-current="true"]').filter({ hasText: /★+/ })
+  const influenceDisplay = await influenceElement.textContent()
+  expect(influenceDisplay).toBe('★★★')
 })
 
 test('influence stars remain after player moves away', async ({ page }) => {
@@ -59,8 +60,9 @@ test('influence stars remain after player moves away', async ({ page }) => {
   await page.waitForTimeout(1000)
 
   const gemSaloon = getLocationCard(page, 'Gem Saloon')
-  // Check for influence stars specifically (not the claim button star)
-  const influenceStars = gemSaloon.locator('[data-testid="player-star"]')
-  await expect(influenceStars).toHaveCount(1)
+  // Check for influence stars - look for the influence element with data-current attribute
+  const influenceElement = gemSaloon.locator('[data-current="true"]').filter({ hasText: /★+/ })
+  const influenceDisplay = await influenceElement.textContent()
+  expect(influenceDisplay).toBe('★')
 })
 

@@ -50,11 +50,15 @@ test('prevents selecting already selected action', async ({ page }) => {
 
   await page.getByRole('button', { name: /Move/ }).click()
   await page.getByRole('heading', { name: 'Hardware Store' }).click()
-  await page.getByRole('button', { name: /Confirm Move/ }).click()
+  await page.getByRole('button', { name: /Confirm move/ }).click()
 
+  // Wait a bit for the action to be marked as completed
+  await page.waitForTimeout(100)
+  
   const moveButton = page.getByRole('button', { name: /Move/ })
-  const buttonColor = await moveButton.evaluate(el => window.getComputedStyle(el).backgroundColor)
-  expect(buttonColor).toContain('rgb(50, 205, 50)')
+  // Check if button has data-selected attribute set to true
+  const isSelected = await moveButton.getAttribute('data-selected')
+  expect(isSelected).toBe('true')
 })
 
 test('action buttons sync with game state', async ({ page }) => {
@@ -83,7 +87,7 @@ test('action buttons sync with game state', async ({ page }) => {
   await page.getByRole('button', { name: /Move/ }).click()
   const empty = page.getByRole('heading', { name: 'Bella Union' })
   await empty.click()
-  await page.getByRole('button', { name: /Confirm Move/ }).click()
+  await page.getByRole('button', { name: /Confirm move/ }).click()
 
   await expect(page.getByRole('button', { name: /Claim/ })).toBeEnabled()
 })
